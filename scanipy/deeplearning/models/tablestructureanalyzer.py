@@ -9,7 +9,7 @@ Created by:
 
 import pickle
 from transformers import pipeline
-from constats.paths import PATH_TO_IMAGE_TO_LATEX_MODEL
+from constats.paths import PATH_TO_TABLE_STRUCTURE_RECOGNITION_MODEL
 
 
 class TableStructureAnalyzer:
@@ -34,7 +34,7 @@ class TableStructureAnalyzer:
         Initialize the TableStructureAnalyzer by loading the pre-trained model.
         """
         # Load the fine-tuned Table Transformer model from a pickle file
-        self.model = pickle.load(open(PATH_TO_IMAGE_TO_LATEX_MODEL, 'rb'))
+        self.model = pickle.load(open(PATH_TO_TABLE_STRUCTURE_RECOGNITION_MODEL, 'rb'))
 
     def __call__(self, image):
         """
