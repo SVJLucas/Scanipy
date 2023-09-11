@@ -1,7 +1,9 @@
 '''
-This file was created by:
+This file contains the implementation of ImageToLatex class
 
-Lucas José (lucas.jose.veloso.de.souza@gmail.com)
+Created by:
+    Lucas José (lucas.jose.veloso.de.souza@gmail.com)
+    Date: September 11, 2023
 '''
 
 
