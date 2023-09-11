@@ -1,5 +1,5 @@
 import pickle
-from transformers import pipeline
+from pix2tex.cli import LatexOCR
 from constats.paths import PATH_TO_IMAGE_TO_LATEX_MODEL
 
 
