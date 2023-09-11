@@ -8,7 +8,6 @@ Created by:
 
 import pickle
 from transformers import pipeline
-from constats.paths import PATH_TO_TABLE_FINDER_MODEL
 
 
 class TableFinder:
@@ -33,7 +32,7 @@ class TableFinder:
         Initialize the TableFinder class by loading the pre-trained model for table detection.
         """
         # Load the pre-trained Table Transformer model from a pickle file for table detection
-        self.model = pickle.load(open(PATH_TO_TABLE_FINDER_MODEL, 'rb'))
+        self.model = pipeline("object-detection", model="microsoft/table-transformer-detection")
 
     def __call__(self, image):
         """

@@ -1,0 +1,1 @@
+from scanipy.extractors.tabledataextractor import TableDataExtractor

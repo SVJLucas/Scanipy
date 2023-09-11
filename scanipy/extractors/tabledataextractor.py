@@ -4,9 +4,9 @@ import pandas as pd
 from PIL import Image
 from typing import List, Dict
 import matplotlib.pyplot as plt
+import fitz
 
-
-from deeplearning import TableStructureAnalyzer, TableFinder
+from scanipy.deeplearning.models import TableStructureAnalyzer, TableFinder
 
 
 class TableDataExtractor:
@@ -241,7 +241,7 @@ class TableDataExtractor:
         # Return the master list of all cell coordinates from all tables
         return all_tables_cell_coordinates
 
-    def get_text_from_page(self, page, box, image_cv):
+    def _get_text_from_page(self, page, box, image_cv):
         xmin, ymin, xmax, ymax = box['xmin'], box['ymin'], box['xmax'], box['ymax']
         if image_cv is not None:
             # Extract each cell image
@@ -307,7 +307,7 @@ class TableDataExtractor:
             for row_idx, row_boxes in enumerate(rows):
                 row_data = []
                 for col_idx, box in enumerate(row_boxes):
-                    text = self.get_text_from_page(page, box, image_cv)
+                    text = self._get_text_from_page(page, box, image_cv)
 
                     row_data.append(text)
 
@@ -316,7 +316,6 @@ class TableDataExtractor:
                     df = pd.DataFrame(columns=row_data)
                 else:
                     df.loc[row_idx - 1] = row_data
-
             return df
 
 

@@ -10,10 +10,9 @@ Created by:
 
 import pickle
 from pix2tex.cli import LatexOCR
-from constats.paths import PATH_TO_IMAGE_TO_LATEX_MODEL
 
 
-class ImageToLatex:
+class EquationToLatex:
     """
     Convert images of mathematical formulas to LaTeX code using the pix2tex model.
 
@@ -26,16 +25,17 @@ class ImageToLatex:
         model (object): The loaded pix2tex model for LaTeX OCR.
 
     Example:
-        >>> img_to_latex = ImageToLatex()
-        >>> latex_code = img_to_latex(image)
+        >>> equation_to_latex = EquationToLatex()
+        >>> image = Image.open('equation_image.png')
+        >>> latex_code = equation_to_latex(image)
     """
 
     def __init__(self):
         """
-        Initialize the ImageToLatex class by loading the pre-trained pix2tex model.
+        Initialize the EquationToLatex class by loading the pre-trained pix2tex model.
         """
         # Load the pre-trained pix2tex model from a pickle file
-        self.model = pickle.load(open(PATH_TO_IMAGE_TO_LATEX_MODEL, 'rb'))
+        self.model = LatexOCR()
 
     def __call__(self, image):
         """
