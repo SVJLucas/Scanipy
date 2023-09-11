@@ -1,3 +1,13 @@
+'''
+This file contains the implementation of ImageToLatex class
+
+Created by:
+    Lucas José (lucas.jose.veloso.de.souza@gmail.com)
+    Date: September 11, 2023
+'''
+
+
+
 import pickle
 from pix2tex.cli import LatexOCR
 from constats.paths import PATH_TO_IMAGE_TO_LATEX_MODEL
