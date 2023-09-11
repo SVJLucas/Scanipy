@@ -1,3 +1,11 @@
+'''
+This file was created by:
+
+Lucas José (lucas.jose.veloso.de.souza@gmail.com)
+'''
+
+
+
 import pickle
 from transformers import pipeline
 from constats.paths import PATH_TO_IMAGE_TO_LATEX_MODEL
