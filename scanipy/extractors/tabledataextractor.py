@@ -158,7 +158,7 @@ class TableDataExtractor:
         analyzed_structure = self._structure_analyzer(table)
         return analyzed_structure
 
-    def _get_cell_coordinates(self, analyzed_structure, xmin=0, ymin=0):
+    def _get_cell_coordinates(self, analyzed_structure, x0=0, y0=0):
         """
         Obtains the coordinates of cells based on the analyzed table structure.
 
@@ -186,10 +186,10 @@ class TableDataExtractor:
                 # Add the cell only if it has a non-zero area
                 if cell_xmin < cell_xmax and cell_ymin < cell_ymax:
                     cells.append({
-                        'xmin': xmin + cell_xmin,
-                        'ymin': ymin + cell_ymin,
-                        'xmax': xmin + cell_xmax,
-                        'ymax': ymin + cell_ymax
+                        'xmin': x0 + cell_xmin,
+                        'ymin': y0 + cell_ymin,
+                        'xmax': x0 + cell_xmax,
+                        'ymax': y0 + cell_ymax
                     })
         print(cells)
         return cells
@@ -227,7 +227,7 @@ class TableDataExtractor:
         for single_table_crop_dict in cropped_table_images:
             single_table_crop = single_table_crop_dict['table']
             xmin = single_table_crop_dict['xmin']
-            ymin = single_table_crop_dict['xmin']
+            ymin = single_table_crop_dict['ymin']
 
             # Analyze the structure of the cropped table to identify rows and columns
             table_structure_analysis = self._analyze_structure(single_table_crop)
@@ -241,7 +241,7 @@ class TableDataExtractor:
         # Return the master list of all cell coordinates from all tables
         return all_tables_cell_coordinates
 
-    def _get_text_from_page(self, page, box, image_cv):
+    def get_text_from_page(self, page, box, image_cv):
         xmin, ymin, xmax, ymax = box['xmin'], box['ymin'], box['xmax'], box['ymax']
         if image_cv is not None:
             # Extract each cell image
@@ -307,7 +307,7 @@ class TableDataExtractor:
             for row_idx, row_boxes in enumerate(rows):
                 row_data = []
                 for col_idx, box in enumerate(row_boxes):
-                    text = self._get_text_from_page(page, box, image_cv)
+                    text = self.get_text_from_page(page, box, image_cv)
 
                     row_data.append(text)
 
@@ -316,6 +316,6 @@ class TableDataExtractor:
                     df = pd.DataFrame(columns=row_data)
                 else:
                     df.loc[row_idx - 1] = row_data
-            return df
 
-
+            dataframes.append(df)
+        return dataframes
