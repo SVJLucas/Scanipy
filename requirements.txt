@@ -62,3 +62,4 @@ tzdata==2023.3
 urllib3==2.0.4
 x-transformers==0.15.0
 matplotlib==3.7.2
+python-doctr==0.7.0

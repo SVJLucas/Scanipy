@@ -1,6 +1,7 @@
 from PIL import Image
 import io
 
+
 class ImageExtractor:
     """
     Extract images from a PDF file using PyMuPDF and add them to a Document object.

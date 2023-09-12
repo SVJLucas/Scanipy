@@ -2,6 +2,8 @@ import pdf2image
 import layoutparser as lp
 import numpy as np
 import PIL
+from doctr.models import ocr_predictor
+
 
 PIL.Image.LINEAR = PIL.Image.BILINEAR
 def is_valid_utf8(s):
@@ -17,7 +19,9 @@ class TextExtractor:
         self.model = lp.Detectron2LayoutModel('lp://PubLayNet/mask_rcnn_X_101_32x8d_FPN_3x/config',
                                               extra_config=["MODEL.ROI_HEADS.SCORE_THRESH_TEST", 0.8],
                                               label_map={0: "Text", 1: "Title", 2: "List", 3: "Table", 4: "Figure"})
-        self.ocr_agent = lp.TesseractAgent(languages='eng')
+        self.tesseract_ocr = lp.TesseractAgent(languages='eng')
+        self.doctr_ocr = ocr_predictor(det_arch='db_resnet50', reco_arch='crnn_vgg16_bn', pretrained=True)
+
         self.images = []
         self.layouts = []
 
@@ -28,11 +32,24 @@ class TextExtractor:
             self.images.append(array_img)
             self.layouts.append(layout)
 
+    def extract_tesseract(self, segment_image):
+        return self.tesseract_ocr.detect(segment_image)
+
+    def extract_doctr(self, segment_image):
+        out = self.doctr_ocr([segment_image])
+        text = []
+        json = out.export()
+
+        for block in json['pages'][0]['blocks']:
+            for line in block['lines']:
+                for word in line['words']:
+                    text.append(word['value'])
+        return ' '.join(text)
+
     def extract(self, document):
         for i, img in enumerate(self.images):
             image_width = len(img[0])
-            layout = self.layouts[i]
-            text_blocks = lp.Layout([b for b in layout if b.type == 'Text' or b.type == 'Title'])
+            text_blocks = self.layouts[i]
 
             # Sort element ID of the left column based on y1 coordinate
             left_interval = lp.Interval(0, image_width / 2, axis='x').put_on_canvas(img)
@@ -52,17 +69,18 @@ class TextExtractor:
                                  .pad(left=5, right=15, top=5, bottom=5)
                                  .crop_image(img))
 
-                # Perform OCR
-                text = self.ocr_agent.detect(segment_image)
+                if block.type in ['Text', 'Title']:
+                    # Perform OCR
+                    text = self.extract_doctr(segment_image)
+                    text = text.strip()
+                    style = None
+                    if block.type == 'Title':
+                        style = 'title'
+                    document.add_text(text, style)
+                elif block.type == 'Figure':
+                    content = PIL.Image.fromarray(segment_image)
+                    document.add_image(content, 'png')
 
-                # Save OCR result
-                block.set(text=text, inplace=True)
-            for txt in text_blocks:
-                content = txt.text.strip()
-                style = None
-                if txt.type == 'Title':
-                    style = 'title'
-                document.add_text(content, style)
 
     def plot(self, page_number):
         lp.draw_box(self.images[page_number], self.layouts[page_number], box_width=5, box_alpha=0.2)

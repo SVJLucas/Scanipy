@@ -30,7 +30,7 @@ class Extractor:
         :return: A Document object containing extracted content.
         """
         document = Document()
-        self.image_extractor.get_images(document)
+        # self.image_extractor.get_images(document)
         self.text_extractor.extract(document)
         # for page_index, page in enumerate(self.pdf_file):
         #     print(self.table_extractor.tables_from_page(page))
