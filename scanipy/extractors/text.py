@@ -3,9 +3,12 @@ import layoutparser as lp
 import numpy as np
 import PIL
 from doctr.models import ocr_predictor
-
+import torch
+import matplotlib.pyplot as plt
 
 PIL.Image.LINEAR = PIL.Image.BILINEAR
+
+
 def is_valid_utf8(s):
     try:
         s.encode('utf-8').decode('utf-8')
@@ -16,12 +19,19 @@ def is_valid_utf8(s):
 
 class TextExtractor:
     def __init__(self, filepath):
+        # models available at https://layout-parser.readthedocs.io/en/latest/notes/modelzoo.html
+
+        self.tesseract_ocr = lp.TesseractAgent(languages='eng')
+        self.doctr_ocr = ocr_predictor(det_arch='db_resnet50', reco_arch='crnn_mobilenet_v3_small', pretrained=True)
+        device = "cpu"
+        if torch.cuda.is_available():
+            self.doctr_ocr.cuda()
+            device = "cuda:0"
+
         self.model = lp.Detectron2LayoutModel('lp://PubLayNet/mask_rcnn_X_101_32x8d_FPN_3x/config',
                                               extra_config=["MODEL.ROI_HEADS.SCORE_THRESH_TEST", 0.8],
-                                              label_map={0: "Text", 1: "Title", 2: "List", 3: "Table", 4: "Figure"})
-        self.tesseract_ocr = lp.TesseractAgent(languages='eng')
-        self.doctr_ocr = ocr_predictor(det_arch='db_resnet50', reco_arch='crnn_vgg16_bn', pretrained=True)
-
+                                              label_map={0: "Text", 1: "Title", 2: "List", 3: "Table", 4: "Figure"},
+                                              device=device)
         self.images = []
         self.layouts = []
 
@@ -71,6 +81,7 @@ class TextExtractor:
 
                 if block.type in ['Text', 'Title']:
                     # Perform OCR
+                    plt.imshow(segment_image)
                     text = self.extract_doctr(segment_image)
                     text = text.strip()
                     style = None
@@ -80,7 +91,6 @@ class TextExtractor:
                 elif block.type == 'Figure':
                     content = PIL.Image.fromarray(segment_image)
                     document.add_image(content, 'png')
-
 
     def plot(self, page_number):
         lp.draw_box(self.images[page_number], self.layouts[page_number], box_width=5, box_alpha=0.2)
