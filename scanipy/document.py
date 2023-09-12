@@ -1,5 +1,5 @@
 import os
-
+import layoutparser as lp
 
 class Document:
     """
@@ -11,6 +11,8 @@ class Document:
 
     def __init__(self):
         self.elements = []
+        self.images = []
+        self.layouts = []
 
     def to_markdown(self, output_folder, filename='output.md'):
         """
@@ -18,6 +20,8 @@ class Document:
 
         :param output_folder: The folder where the Markdown file will be saved.
         """
+        if not os.path.exists(output_folder):
+            os.makedirs(output_folder)
         output = ""
         for element in self.elements:
             element_output = element.print(output_folder)
@@ -40,6 +44,12 @@ class Document:
         text = TextElement(content, style)
         self.elements.append(text)
 
+    def visualize_layout(self, page=0):
+        return lp.draw_box(self.images[page], self.layouts[page], box_width=5, box_alpha=0.2)
+
+    def store_page(self, image, layout):
+        self.layouts.append(layout)
+        self.images.append(image)
 
 class TextElement:
     def __init__(self, content, style=None):

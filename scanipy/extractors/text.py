@@ -18,7 +18,7 @@ def is_valid_utf8(s):
 
 
 class TextExtractor:
-    def __init__(self, filepath):
+    def __init__(self):
         # models available at https://layout-parser.readthedocs.io/en/latest/notes/modelzoo.html
 
         self.tesseract_ocr = lp.TesseractAgent(languages='eng')
@@ -32,15 +32,6 @@ class TextExtractor:
                                               extra_config=["MODEL.ROI_HEADS.SCORE_THRESH_TEST", 0.8],
                                               label_map={0: "Text", 1: "Title", 2: "List", 3: "Table", 4: "Figure"},
                                               device=device)
-        self.images = []
-        self.layouts = []
-
-        imgs = pdf2image.convert_from_path(filepath)
-        for img in imgs:
-            array_img = np.asarray(img)
-            layout = self.model.detect(array_img)
-            self.images.append(array_img)
-            self.layouts.append(layout)
 
     def extract_tesseract(self, segment_image):
         return self.tesseract_ocr.detect(segment_image)
@@ -56,10 +47,21 @@ class TextExtractor:
                     text.append(word['value'])
         return ' '.join(text)
 
-    def extract(self, document):
-        for i, img in enumerate(self.images):
+    def extract(self, filepath, document):
+        images = []
+        layouts = []
+
+        imgs = pdf2image.convert_from_path(filepath)
+        for img in imgs:
+            array_img = np.asarray(img)
+            layout = self.model.detect(array_img)
+            images.append(array_img)
+            layouts.append(layout)
+            document.store_page(img, layout)
+
+        for i, img in enumerate(images):
             image_width = len(img[0])
-            text_blocks = self.layouts[i]
+            text_blocks = layouts[i]
 
             # Sort element ID of the left column based on y1 coordinate
             left_interval = lp.Interval(0, image_width / 2, axis='x').put_on_canvas(img)
@@ -81,7 +83,6 @@ class TextExtractor:
 
                 if block.type in ['Text', 'Title']:
                     # Perform OCR
-                    plt.imshow(segment_image)
                     text = self.extract_doctr(segment_image)
                     text = text.strip()
                     style = None
@@ -93,4 +94,4 @@ class TextExtractor:
                     document.add_image(content, 'png')
 
     def plot(self, page_number):
-        lp.draw_box(self.images[page_number], self.layouts[page_number], box_width=5, box_alpha=0.2)
+        lp.draw_box(images[page_number], layouts[page_number], box_width=5, box_alpha=0.2)
