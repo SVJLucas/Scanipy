@@ -36,6 +36,22 @@ class Document:
         image = ImageElement(f'img{len(self.elements)}', content, image_ext)
         self.elements.append(image)
 
+    def add_text(self, content, style=None):
+        text = TextElement(content, style)
+        self.elements.append(text)
+
+
+class TextElement:
+    def __init__(self, content, style=None):
+        self.content = content
+        self.style = style
+
+    def print(self, output_folder):
+        response = self.content + '\n\n'
+        if self.style == 'title':
+            response = '## ' + response
+        return response
+
 
 class ImageElement:
     """
@@ -62,4 +78,4 @@ class ImageElement:
         filename = f"{self.key}.{self.image_ext}"
         output_path = os.path.join(output_folder, filename)
         self.content.save(open(output_path, "wb"))
-        return f"\n![image]({filename})\n"
+        return f"\n![image]({filename})\n\n"

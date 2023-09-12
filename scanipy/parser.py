@@ -18,6 +18,7 @@ class Parser:
         :param path: The path to the PDF file to parse.
         """
         self.pdf_file = fitz.open(path)
+        self.path = path
 
     def save_markdown(self, output_folder):
         """
@@ -27,6 +28,6 @@ class Parser:
         """
         if not os.path.exists(output_folder):
             os.makedirs(output_folder)
-        extractor = Extractor(self.pdf_file)
+        extractor = Extractor(self.pdf_file, self.path)
         document = extractor.extract()
         document.to_markdown(output_folder)

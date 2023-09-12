@@ -1,6 +1,7 @@
 from .document import Document
 from .imageextractor import ImageExtractor
-
+from .tabledataextractor import TableDataExtractor
+from .text import TextExtractor
 
 class Extractor:
     """
@@ -11,7 +12,7 @@ class Extractor:
         image_extractor (ImageExtractor): An instance of ImageExtractor to extract images.
     """
 
-    def __init__(self, pdf_file):
+    def __init__(self, pdf_file, filepath):
         """
         Initialize a new Extractor instance.
 
@@ -19,6 +20,8 @@ class Extractor:
         """
         self.pdf_file = pdf_file
         self.image_extractor = ImageExtractor(pdf_file)
+        self.table_extractor = TableDataExtractor()
+        self.text_extractor = TextExtractor(filepath)
 
     def extract(self):
         """
@@ -28,4 +31,7 @@ class Extractor:
         """
         document = Document()
         self.image_extractor.get_images(document)
+        self.text_extractor.extract(document)
+        # for page_index, page in enumerate(self.pdf_file):
+        #     print(self.table_extractor.tables_from_page(page))
         return document
