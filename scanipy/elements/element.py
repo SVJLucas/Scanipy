@@ -16,3 +16,7 @@ class Element:
     def __lt__(self, other):
         return (self.x_min < other.x_min - X_DIFF_TOLERANCE) or \
             (abs(self.x_min - other.x_min) < X_DIFF_TOLERANCE and (self.y_min < other.y_min))
+
+    def is_in(self, other):
+        return (self.x_min >= other.x_min) and (self.x_max <= other.x_max) and  \
+            (self.y_min >= other.y_min) and (self.y_max <= other.y_max)
