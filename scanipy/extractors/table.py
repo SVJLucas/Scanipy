@@ -346,6 +346,9 @@ class TableDataExtractor(Extractor):
             dataframes.extend(dfs)
             document.save_tables(image, detected_tables)
         for df, box in zip(dataframes, detected_tables):
-            x_min, y_min, x_max, y_max = box['box'].values()
+            x_min, y_min, x_max, y_max = self.convert_pdf_to_image_reference(box['box']).values()
             table = TableElement(x_min, y_min, x_max, y_max, 1, df)
             document.add_element(table)
+
+    def convert_pdf_to_image_reference(self, box):
+        return {k: v / IMAGE_TO_FITZ_CONSTANT for k, v in box.items()}

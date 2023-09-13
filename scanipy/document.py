@@ -28,12 +28,16 @@ class Document:
         if not os.path.exists(output_folder):
             os.makedirs(output_folder)
         output = ""
-        for element in self.elements:
+        sorted_elements = self.apply_element_hierarchy()
+        for element in sorted_elements:
             element_output = element.print(output_folder)
             output += element_output
         output_path = os.path.join(output_folder, filename)
         with open(output_path, 'w') as f:
             f.write(output)
+
+    def apply_element_hierarchy(self):
+        return sorted(self.elements)
 
     def add_element(self, element):
         self.elements.append(element)
