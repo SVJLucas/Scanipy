@@ -5,9 +5,11 @@ from PIL import Image
 from typing import List, Dict
 import matplotlib.pyplot as plt
 import fitz
+import pytesseract
 
+from math import ceil, floor
 from scanipy.deeplearning.models import TableStructureAnalyzer, TableFinder
-
+import pdf2image
 
 class TableDataExtractor:
     """
@@ -152,9 +154,9 @@ class TableDataExtractor:
             table_structure (List[Dict]): List of rows and columns with their bounding boxes.
         """
         # Run structure recognition on the table image
-        plt.imshow(table)
-        plt.show()
-        print(len(self._detect_tables(table)))
+        # plt.imshow(table)
+        # plt.show()
+        # print(len(self._detect_tables(table)))
         analyzed_structure = self._structure_analyzer(table)
         return analyzed_structure
 
@@ -191,7 +193,7 @@ class TableDataExtractor:
                         'xmax': x0 + cell_xmax,
                         'ymax': y0 + cell_ymax
                     })
-        print(cells)
+        # print(cells)
         return cells
 
     def _extract_cell_coordinates_from_image(self, input_image):
@@ -239,44 +241,49 @@ class TableDataExtractor:
             all_tables_cell_coordinates.append(cell_coordinates)
 
         # Return the master list of all cell coordinates from all tables
-        return all_tables_cell_coordinates
+        return all_tables_cell_coordinates, detected_tables
 
-    def get_text_from_page(self, page, box, image_cv):
+    def get_text_from_page(self, page, box):
         xmin, ymin, xmax, ymax = box['xmin'], box['ymin'], box['xmax'], box['ymax']
-        if image_cv is not None:
-            # Extract each cell image
-            cell_image = image_cv[ymin:ymax, xmin:xmax]
+        # Define the rectangle for cropping (x0, y0, x1, y1)
+        crop_rect = fitz.Rect(xmin, ymin, xmax, ymax)
 
-            # Convert to PIL Image
-            cell_image_pil = Image.fromarray(cv2.cvtColor(cell_image, cv2.COLOR_BGR2RGB))
-
-            # Perform OCR to get text
-            text = pytesseract.image_to_string(cell_image_pil).strip()
-
-        else:
-            # Define the rectangle for cropping (x0, y0, x1, y1)
-            crop_rect = fitz.Rect(xmin, ymin, xmax, ymax)
-
-            # Extract text from the cropped area
-            text = page.get_text("text", clip=crop_rect)
+        # Extract text from the cropped area
+        text = page.get_text("text", clip=crop_rect).strip().replace('\n', '')
 
         return text
 
-    def tables_from_page(self, page, is_image=False):
+    def get_text_from_image(self, image_cv, box):
+        xmin, ymin, xmax, ymax = box['xmin'], box['ymin'], box['xmax'], box['ymax']
+        # Extract each cell image
+        # cell_image = image_cv[ymin:ymax, xmin:xmax]
+        cell_image = image_cv[floor(ymin):ceil(ymax), floor(xmin):ceil(xmax)]
+
+        # Convert to PIL Image
+        cell_image_pil = Image.fromarray(cv2.cvtColor(cell_image, cv2.COLOR_BGR2RGB))
+
+        # Perform OCR to get text
+        text = pytesseract.image_to_string(cell_image_pil).strip().replace('\n', '')
+
+        return text
+
+    def tables_from_page(self, filepath, page, is_image=False):
         pix = page.get_pixmap()
-        image = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
-        all_tables_cell_coordinates = self._extract_cell_coordinates_from_image(image)
+
+        if is_image:
+            # high resolution image
+            image = pdf2image.convert_from_path(filepath)[0]
+        else:
+            # image from pages
+            image = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
+
+        self.visualize_tables(image)
+
+        all_tables_cell_coordinates, detected_tables = self._extract_cell_coordinates_from_image(image)
 
         dataframes = []
 
         for boxes in all_tables_cell_coordinates:
-
-            if is_image:
-                # Convert the PIL Image to an OpenCV image (NumPy array)
-                image_cv = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
-            else:
-                image_cv = None
-
             # Sort boxes by ymin to separate rows
             boxes = sorted(boxes, key=lambda x: x['ymin'])
 
@@ -307,8 +314,11 @@ class TableDataExtractor:
             for row_idx, row_boxes in enumerate(rows):
                 row_data = []
                 for col_idx, box in enumerate(row_boxes):
-                    text = self.get_text_from_page(page, box, image_cv)
-
+                    if is_image:
+                        image_cv = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
+                        text = self.get_text_from_image(image_cv, box)
+                    else:
+                        text = self.get_text_from_page(page, box)
                     row_data.append(text)
 
                 # If it's the first row, set the DataFrame columns
@@ -318,4 +328,14 @@ class TableDataExtractor:
                     df.loc[row_idx - 1] = row_data
 
             dataframes.append(df)
-        return dataframes
+        return dataframes, image, detected_tables
+
+    def extract(self, pdf_path, document):
+        pdf_file = fitz.open(pdf_path)
+        dataframes = [ ]
+        for page in pdf_file:
+            dfs, image, detected_tables = self.tables_from_page(pdf_path, page, is_image=False)
+            dataframes.extend(dfs)
+            document.save_tables(image, detected_tables)
+        for df in dataframes:
+            document.add_table(df)

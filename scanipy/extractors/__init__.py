@@ -1,1 +1,2 @@
-from .extractor import Extractor
+from .table import TableDataExtractor
+from .text import TextExtractor

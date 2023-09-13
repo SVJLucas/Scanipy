@@ -61,21 +61,21 @@ class TextExtractor:
 
         for i, img in enumerate(images):
             image_width = len(img[0])
-            text_blocks = layouts[i]
+            selected_blocks = layouts[i]
 
             # Sort element ID of the left column based on y1 coordinate
             left_interval = lp.Interval(0, image_width / 2, axis='x').put_on_canvas(img)
-            left_blocks = text_blocks.filter_by(left_interval, center=True)._blocks
+            left_blocks = selected_blocks.filter_by(left_interval, center=True)._blocks
             left_blocks.sort(key=lambda b: b.coordinates[1])
 
             # Sort element ID of the right column based on y1 coordinate
-            right_blocks = [b for b in text_blocks if b not in left_blocks]
+            right_blocks = [b for b in selected_blocks if b not in left_blocks]
             right_blocks.sort(key=lambda b: b.coordinates[1])
 
             # Sort the overall element ID starts from left column
-            text_blocks = lp.Layout([b.set(id=idx) for idx, b in enumerate(left_blocks + right_blocks)])
+            selected_blocks = lp.Layout([b.set(id=idx) for idx, b in enumerate(left_blocks + right_blocks)])
 
-            for block in text_blocks:
+            for block in selected_blocks:
                 # Crop image around the detected layout
                 segment_image = (block
                                  .pad(left=5, right=15, top=5, bottom=5)

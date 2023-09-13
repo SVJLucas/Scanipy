@@ -1,5 +1,6 @@
 import fitz
-from .extractors import Extractor
+from .extractors import TextExtractor, TableDataExtractor
+from .document import Document
 import os
 
 
@@ -17,7 +18,11 @@ class Parser:
 
         :param path: The path to the PDF file to parse.
         """
-        self.extractor = Extractor()
+        self.table_extractor = TableDataExtractor()
+        self.text_extractor = TextExtractor()
 
     def extract(self, path):
-        return self.extractor.extract(path)
+        document = Document()
+        self.text_extractor.extract(path, document)
+        self.table_extractor.extract(path, document)
+        return document
