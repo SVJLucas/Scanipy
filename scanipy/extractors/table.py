@@ -9,9 +9,16 @@ import pytesseract
 
 from math import ceil, floor
 from scanipy.deeplearning.models import TableStructureAnalyzer, TableFinder
+from scanipy.elements import TableElement
 import pdf2image
 
-class TableDataExtractor:
+from .extractor import Extractor
+
+DPI = 200
+IMAGE_TO_FITZ_CONSTANT = 72 / DPI
+
+
+class TableDataExtractor(Extractor):
     """
     A class to manage the extraction of tables from images.
 
@@ -272,12 +279,10 @@ class TableDataExtractor:
 
         if is_image:
             # high resolution image
-            image = pdf2image.convert_from_path(filepath)[0]
+            image = pdf2image.convert_from_path(filepath, dpi=DPI)[0]
         else:
             # image from pages
             image = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
-
-        self.visualize_tables(image)
 
         all_tables_cell_coordinates, detected_tables = self._extract_cell_coordinates_from_image(image)
 
@@ -314,6 +319,8 @@ class TableDataExtractor:
             for row_idx, row_boxes in enumerate(rows):
                 row_data = []
                 for col_idx, box in enumerate(row_boxes):
+                    # this converts from image to fitz coordinate system
+                    # box = {k: v * IMAGE_TO_FITZ_CONSTANT for k, v in box.items()}
                     if is_image:
                         image_cv = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
                         text = self.get_text_from_image(image_cv, box)
@@ -332,10 +339,13 @@ class TableDataExtractor:
 
     def extract(self, pdf_path, document):
         pdf_file = fitz.open(pdf_path)
-        dataframes = [ ]
+        dataframes = []
+        detected_tables = []
         for page in pdf_file:
             dfs, image, detected_tables = self.tables_from_page(pdf_path, page, is_image=False)
             dataframes.extend(dfs)
             document.save_tables(image, detected_tables)
-        for df in dataframes:
-            document.add_table(df)
+        for df, box in zip(dataframes, detected_tables):
+            x_min, y_min, x_max, y_max = box['box'].values()
+            table = TableElement(x_min, y_min, x_max, y_max, 1, df)
+            document.add_element(table)

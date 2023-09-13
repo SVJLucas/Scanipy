@@ -5,8 +5,11 @@ import PIL
 from doctr.models import ocr_predictor
 import torch
 import matplotlib.pyplot as plt
+from scanipy.elements import TextElement, ImageElement
 
 PIL.Image.LINEAR = PIL.Image.BILINEAR
+
+from .extractor import Extractor
 
 
 def is_valid_utf8(s):
@@ -17,16 +20,16 @@ def is_valid_utf8(s):
         return False
 
 
-class TextExtractor:
+class TextExtractor(Extractor):
     def __init__(self):
         # models available at https://layout-parser.readthedocs.io/en/latest/notes/modelzoo.html
 
         self.tesseract_ocr = lp.TesseractAgent(languages='eng')
         self.doctr_ocr = ocr_predictor(det_arch='db_resnet50', reco_arch='crnn_mobilenet_v3_small', pretrained=True)
         device = "cpu"
-        if torch.cuda.is_available():
-            self.doctr_ocr.cuda()
-            device = "cuda:0"
+        # if torch.cuda.is_available():
+        #     self.doctr_ocr.cuda()
+        #     device = "cuda:0"
 
         self.model = lp.Detectron2LayoutModel('lp://PubLayNet/mask_rcnn_X_101_32x8d_FPN_3x/config',
                                               extra_config=["MODEL.ROI_HEADS.SCORE_THRESH_TEST", 0.8],
@@ -75,23 +78,26 @@ class TextExtractor:
             # Sort the overall element ID starts from left column
             selected_blocks = lp.Layout([b.set(id=idx) for idx, b in enumerate(left_blocks + right_blocks)])
 
-            for block in selected_blocks:
+            for i, block in enumerate(selected_blocks):
                 # Crop image around the detected layout
                 segment_image = (block
                                  .pad(left=5, right=15, top=5, bottom=5)
                                  .crop_image(img))
+                rect = block.block
+                x_min, y_min, x_max, y_max = rect.x_1, rect.y_1, rect.x_2, rect.y_2
 
                 if block.type in ['Text', 'Title']:
-                    # Perform OCR
                     text = self.extract_doctr(segment_image)
                     text = text.strip()
                     style = None
                     if block.type == 'Title':
                         style = 'title'
-                    document.add_text(text, style)
+                    text = TextElement(x_min, y_min, x_max, y_max, 0, text, style)
+                    document.add_element(text)
                 elif block.type == 'Figure':
                     content = PIL.Image.fromarray(segment_image)
-                    document.add_image(content, 'png')
+                    image = ImageElement(x_min, y_min, x_max, y_max, 0, f'img{i}', content, 'png')
+                    document.add_element(image)
 
     def plot(self, page_number):
         lp.draw_box(images[page_number], layouts[page_number], box_width=5, box_alpha=0.2)

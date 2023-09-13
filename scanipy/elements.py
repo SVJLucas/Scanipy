@@ -1,6 +1,18 @@
 import os
 
-class TextElement:
+
+class Element:
+    def __init__(self, x_min, y_min, x_max, y_max, pipeline_step = None):
+        self.x_min = x_min
+        self.y_min = y_min
+        self.x_max = x_max
+        self.y_max = y_max
+        self.pipeline_step = pipeline_step
+        self.x_center = (self.x_min + self.x_max) / 2
+        self.y_center = (self.y_min + self.y_max) / 2
+
+
+class TextElement(Element):
     """
     Represents a text element with optional styling.
 
@@ -14,7 +26,7 @@ class TextElement:
 
     """
 
-    def __init__(self, content, style=None):
+    def __init__(self, x_min, y_min, x_max, y_max, pipeline_step, content, style=None):
         """
         Initializes a new TextElement.
 
@@ -22,6 +34,7 @@ class TextElement:
         content (str): The content of the text element.
         style (str, optional): The style of the text element, e.g., 'title'.
         """
+        super().__init__(x_min, y_min, x_max, y_max, pipeline_step)
         self.content = content
         self.style = style
 
@@ -40,7 +53,8 @@ class TextElement:
             response = '## ' + response
         return response
 
-class TableElement:
+
+class TableElement(Element):
     """
     Represents a table element for printing tabular data.
 
@@ -53,13 +67,14 @@ class TableElement:
 
     """
 
-    def __init__(self, df):
+    def __init__(self, x_min, y_min, x_max, y_max, pipeline_step, df):
         """
         Initializes a new TableElement.
 
         Parameters:
         df (pandas.DataFrame): The DataFrame containing tabular data.
         """
+        super().__init__(x_min, y_min, x_max, y_max, pipeline_step)
         self.df = df
 
     def print(self, output_folder):
@@ -75,7 +90,8 @@ class TableElement:
         response = self.df.to_markdown() + '\n\n'
         return response
 
-class ImageElement:
+
+class ImageElement(Element):
     """
     Represents an image element within a document.
 
@@ -85,7 +101,8 @@ class ImageElement:
         image_ext (str): The file extension for the image (e.g., 'jpg', 'png').
     """
 
-    def __init__(self, key, content, image_ext):
+    def __init__(self, x_min, y_min, x_max, y_max, pipeline_step, key, content, image_ext):
+        super().__init__(x_min, y_min, x_max, y_max, pipeline_step)
         self.key = key
         self.content = content
         self.image_ext = image_ext

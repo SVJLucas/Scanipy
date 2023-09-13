@@ -4,6 +4,7 @@ import numpy as np
 from .elements import TableElement, TextElement, ImageElement
 import matplotlib.pyplot as plt
 
+
 class Document:
     """
     Represents a document containing various elements, such as images.
@@ -34,28 +35,15 @@ class Document:
         with open(output_path, 'w') as f:
             f.write(output)
 
-    def add_image(self, content, image_ext):
-        """
-        Add an image element to the document.
-
-        :param content: The image content to be added.
-        :param image_ext: The file extension for the image (e.g., 'jpg', 'png').
-        """
-        image = ImageElement(f'img{len(self.elements)}', content, image_ext)
-        self.elements.append(image)
-
-    def add_table(self, df):
-        self.elements.append(TableElement(df))
-
-    def add_text(self, content, style=None):
-        text = TextElement(content, style)
-        self.elements.append(text)
+    def add_element(self, element):
+        self.elements.append(element)
 
     def visualize_pipeline(self, page=0, step=0):
         if step == 0:
             return lp.draw_box(self.images[page], self.layouts[page], box_width=5, box_alpha=0.2)
         if step == 1:
-            self._visualize_tables(self.table_extractor_data[page]['image'], self.table_extractor_data[page]['detected_tables'])
+            self._visualize_tables(self.table_extractor_data[page]['image'],
+                                   self.table_extractor_data[page]['detected_tables'])
             return
         raise ValueError(f'step {step} not recognized')
 
@@ -64,7 +52,7 @@ class Document:
         segment_image = (block
                          .pad(left=5, right=15, top=5, bottom=5)
                          .crop_image(np.asarray(self.images[page])))
-        return segment_image
+        return block
 
     def _visualize_tables(self, image, detected_tables):
         # Create a matplotlib figure and axis for visualization

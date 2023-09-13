@@ -20,9 +20,10 @@ class Parser:
         """
         self.table_extractor = TableDataExtractor()
         self.text_extractor = TextExtractor()
+        self.pipeline = [self.text_extractor, self.table_extractor]
 
     def extract(self, path):
         document = Document()
-        self.text_extractor.extract(path, document)
-        self.table_extractor.extract(path, document)
+        for step in self.pipeline:
+            step.extract(path, document)
         return document
