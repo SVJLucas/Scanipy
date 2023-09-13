@@ -11,18 +11,18 @@ class EquationExtractor:
 
     def extract(self, path, document, pipeline_step):
         imgs = pdf2image.convert_from_path(path)
-        image = imgs[0]
-        outs = self.model(image, resized_shape=600)
-        isolated_equations = [o for o in outs if o['type'] == 'isolated']
-        for eq in isolated_equations:
-            x0, y0 = eq['position'][0]
-            x2, y2 = eq['position'][2]
-            equation = EquationElement(x0, y0, x2, y2,
-                                       pipeline_step=pipeline_step, latex_content=eq['text'], is_inside_text=False)
-            isolated_check = True
-            for element in document.elements:
-                if equation.is_in(element):
-                    isolated_check = False
-                    break
-            if isolated_check:
-                document.add_element(equation)
+        for page, image in enumerate(imgs):
+            outs = self.model(image, resized_shape=600)
+            isolated_equations = [o for o in outs if o['type'] == 'isolated']
+            for eq in isolated_equations:
+                x0, y0 = eq['position'][0]
+                x2, y2 = eq['position'][2]
+                equation = EquationElement(x0, y0, x2, y2,
+                                           pipeline_step=pipeline_step, latex_content=eq['text'], is_inside_text=False)
+                isolated_check = True
+                for element in document.elements.get(page, []):
+                    if equation.is_in(element):
+                        isolated_check = False
+                        break
+                if isolated_check:
+                    document.add_element(page, equation)

@@ -62,9 +62,9 @@ class TextExtractor(Extractor):
             layouts.append(layout)
             document.store_page(img, layout)
 
-        for i, img in enumerate(images):
+        for page, img in enumerate(images):
             image_width = len(img[0])
-            selected_blocks = layouts[i]
+            selected_blocks = layouts[page]
 
             # Sort element ID of the left column based on y1 coordinate
             left_interval = lp.Interval(0, image_width / 2, axis='x').put_on_canvas(img)
@@ -93,11 +93,11 @@ class TextExtractor(Extractor):
                     if block.type == 'Title':
                         style = 'title'
                     text = TextElement(x_min, y_min, x_max, y_max, 0, text, style)
-                    document.add_element(text)
+                    document.add_element(page, text)
                 elif block.type == 'Figure':
                     content = PIL.Image.fromarray(segment_image)
                     image = ImageElement(x_min, y_min, x_max, y_max, pipeline_step, f'img{i}', content, 'png')
-                    document.add_element(image)
+                    document.add_element(page, image)
 
     def plot(self, page_number):
         lp.draw_box(images[page_number], layouts[page_number], box_width=5, box_alpha=0.2)

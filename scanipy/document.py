@@ -14,7 +14,7 @@ class Document:
     """
 
     def __init__(self):
-        self.elements = []
+        self.elements = {}
         self.images = []
         self.layouts = []
         self.table_extractor_data = []
@@ -28,19 +28,25 @@ class Document:
         if not os.path.exists(output_folder):
             os.makedirs(output_folder)
         output = ""
-        sorted_elements = self.apply_element_hierarchy()
-        for element in sorted_elements:
-            element_output = element.print(output_folder)
-            output += element_output
+        print(self.elements)
+        sorted_pages = sorted(list(self.elements.keys()))
+        for page in sorted_pages:
+            sorted_elements = self.get_ordered_elements(page)
+            for element in sorted_elements:
+                element_output = element.print(output_folder)
+                output += element_output
+
         output_path = os.path.join(output_folder, filename)
         with open(output_path, 'w') as f:
             f.write(output)
 
-    def apply_element_hierarchy(self):
-        return sorted(self.elements)
+    def get_ordered_elements(self, page):
+        return sorted(self.elements[page])
 
-    def add_element(self, element):
-        self.elements.append(element)
+    def add_element(self, page, element):
+        if self.elements.get(page) is None:
+            self.elements[page] = []
+        self.elements[page].append(element)
 
     def visualize_pipeline(self, page=0, step=0):
         if step == 0:

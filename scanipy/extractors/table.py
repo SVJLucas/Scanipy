@@ -339,16 +339,14 @@ class TableDataExtractor(Extractor):
 
     def extract(self, pdf_path, document, pipeline_step):
         pdf_file = fitz.open(pdf_path)
-        dataframes = []
-        detected_tables = []
-        for page in pdf_file:
+        for page_number, page in enumerate(pdf_file):
             dfs, image, detected_tables = self.tables_from_page(pdf_path, page, is_image=False)
-            dataframes.extend(dfs)
             document.save_tables(image, detected_tables)
-        for df, box in zip(dataframes, detected_tables):
-            x_min, y_min, x_max, y_max = self.convert_pdf_to_image_reference(box['box']).values()
-            table = TableElement(x_min, y_min, x_max, y_max, pipeline_step, df)
-            document.add_element(table)
+
+            for df, box in zip(dfs, detected_tables):
+                x_min, y_min, x_max, y_max = self.convert_pdf_to_image_reference(box['box']).values()
+                table = TableElement(x_min, y_min, x_max, y_max, pipeline_step, df)
+                document.add_element(page_number, table)
 
     def convert_pdf_to_image_reference(self, box):
         return {k: v / IMAGE_TO_FITZ_CONSTANT for k, v in box.items()}

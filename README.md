@@ -4,3 +4,21 @@
 
 
 **Scanipy** stands for "scan it with Python"—it's your smart Python library for **scanning and parsing complex PDF files** like books, reports, articles, and academic papers. Utilizing cutting-edge **Deep Learning** algorithms, Scanipy transforms your PDFs into a treasure trove of extractable information: **tables, images, equations, and text**. Say goodbye to manual scanning tasks and hello to automated, intelligent data extraction.
+
+## Example
+
+Run with
+
+```python
+import scanipy
+
+parser = scanipy.Parser()
+document = parser.extract("test.pdf")
+document.to_markdown(output_folder="output")
+```
+
+Visualize the extracted blocks with
+
+```python
+document.visualize_pipeline(page=0, step=0)
+```
