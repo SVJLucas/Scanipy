@@ -337,7 +337,7 @@ class TableDataExtractor(Extractor):
             dataframes.append(df)
         return dataframes, image, detected_tables
 
-    def extract(self, pdf_path, document):
+    def extract(self, pdf_path, document, pipeline_step):
         pdf_file = fitz.open(pdf_path)
         dataframes = []
         detected_tables = []
@@ -347,7 +347,7 @@ class TableDataExtractor(Extractor):
             document.save_tables(image, detected_tables)
         for df, box in zip(dataframes, detected_tables):
             x_min, y_min, x_max, y_max = self.convert_pdf_to_image_reference(box['box']).values()
-            table = TableElement(x_min, y_min, x_max, y_max, 1, df)
+            table = TableElement(x_min, y_min, x_max, y_max, pipeline_step, df)
             document.add_element(table)
 
     def convert_pdf_to_image_reference(self, box):

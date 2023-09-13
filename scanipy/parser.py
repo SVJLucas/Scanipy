@@ -1,5 +1,5 @@
 import fitz
-from .extractors import TextExtractor, TableDataExtractor
+from .extractors import TextExtractor, TableDataExtractor, EquationExtractor
 from .document import Document
 import os
 
@@ -20,10 +20,11 @@ class Parser:
         """
         self.table_extractor = TableDataExtractor()
         self.text_extractor = TextExtractor()
-        self.pipeline = [self.text_extractor, self.table_extractor]
+        self.equation_extractor = EquationExtractor()
+        self.pipeline = [self.text_extractor, self.table_extractor, self.equation_extractor]
 
     def extract(self, path):
         document = Document()
-        for step in self.pipeline:
-            step.extract(path, document)
+        for step, extractor in enumerate(self.pipeline):
+            extractor.extract(path, document, pipeline_step=step)
         return document

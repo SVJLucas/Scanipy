@@ -50,7 +50,7 @@ class TextExtractor(Extractor):
                     text.append(word['value'])
         return ' '.join(text)
 
-    def extract(self, filepath, document):
+    def extract(self, filepath, document, pipeline_step):
         images = []
         layouts = []
 
@@ -96,7 +96,7 @@ class TextExtractor(Extractor):
                     document.add_element(text)
                 elif block.type == 'Figure':
                     content = PIL.Image.fromarray(segment_image)
-                    image = ImageElement(x_min, y_min, x_max, y_max, 0, f'img{i}', content, 'png')
+                    image = ImageElement(x_min, y_min, x_max, y_max, pipeline_step, f'img{i}', content, 'png')
                     document.add_element(image)
 
     def plot(self, page_number):
