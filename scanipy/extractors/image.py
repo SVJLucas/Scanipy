@@ -75,6 +75,9 @@ class ImageExtractor(Extractor):
         elif unique_key in self.unique_keys:
             raise TypeError("The parameters unique_key must be unique.")
 
+        # Update the set of used keys
+        self.unique_keys.add(unique_key)
+
         # Update the image element with the extracted image content and unique key
         image_element.image_content = image_content
         image_element.unique_key = unique_key
