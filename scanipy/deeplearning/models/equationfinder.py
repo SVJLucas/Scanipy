@@ -34,16 +34,16 @@ class EquationFinder:
         self.model = LayoutAnalyzer(model_name='mfd',
                                     device=device)
 
-    def __call__(self, image: PIL.Image, pipeline_step: Union[int, None] = None) -> List[Union[EquationElement]]:
+    def __call__(self, image: PIL.Image, pipeline_step: Union[int, None] = None) -> List[EquationElement]:
         """
         Detects equation elements in the given image and returns them as a list.
         
         Args:
-            image: The image in which to detect layout elements.
-            pipeline_step: An optional integer representing the step in a pipeline. Defaults to None.
+            image (PIL.Image): The image in which to detect layout elements.
+            pipeline_step (int or None): An optional integer representing the step in a pipeline. Defaults to None.
         
         Returns:
-            empty_elements: A list of detected layout elements, but only with its positions (no extracted content yet).
+            empty_elements (List[EquationElement]): A list of detected layout elements, but only with its positions (no extracted content yet).
         """
         # Use the loaded model to detect equations in the given image
         equations = self.model(image)
