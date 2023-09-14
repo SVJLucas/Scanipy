@@ -8,6 +8,8 @@ class TextElement(Element):
 
     Attributes:
         text_content (str): The content of the text element.
+        has_equation_inside (bool): If there's some equation inside the text
+        
     """
 
     def __init__(self, x_min: int, y_min: int, x_max: int, y_max: int, pipeline_step: Union[int, None] = None, content: Union[str, None] = None):
@@ -38,7 +40,35 @@ class TextElement(Element):
 
         # Initialize additional instance variable specific to TextElement
         self._text_content = content
+        self._has_equation_inside = False
 
+    @property
+    def has_equation_inside(self) -> bool:
+        """
+        Determines if the element contains equations.
+    
+        This method checks if the element has any equations inside it and returns a boolean value accordingly.
+    
+        Returns:
+            bool: True if the element contains equations, otherwise False.
+        """
+        return self._has_equation_inside
+
+    @has_equation_inside.setter
+    def has_equation_inside(self, value: bool):
+        """
+        Sets a boolean that checks if the element has any equations inside it.
+
+        Args:
+            value (bool): The new boolean value.
+
+        Raises:
+            TypeError: If the provided value is not a bool.
+        """
+        if not isinstance(value, bool):
+            raise TypeError("has_equation_inside must be a bool")
+        self._has_equation_inside = value
+        
     # Setter and Getter for text_content
     @property
     def text_content(self) -> Union[str, None]:
@@ -72,7 +102,7 @@ class TextElement(Element):
         Returns:
             str: A string representation of the object.
         """
-        return f"TextElement(x_min={self.x_min}, y_min={self.y_min}, x_max={self.x_max}, y_max={self.y_max}, pipeline_step={self.pipeline_step}, text_content={self.text_content})"
+        return f"TextElement(x_min={self.x_min}, y_min={self.y_min}, x_max={self.x_max}, y_max={self.y_max}, pipeline_step={self.pipeline_step}, text_content={self.text_content}, has_equation_inside={self.has_equation_inside})"
 
     def generate_markdown(self, output_directory: str) -> str:
         """
