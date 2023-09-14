@@ -1,103 +1,103 @@
-import pdf2image
-import layoutparser as lp
-import numpy as np
-import PIL
-from doctr.models import ocr_predictor
-import torch
-import matplotlib.pyplot as plt
-from scanipy.elements import TextElement, ImageElement
+from typing import Union
+from PIL import Image
+from pdfplumber.page import Page
+from .extractors import Extractor
+from .elements import TextElement 
+from deeplearning.models import TextOCR 
 
-PIL.Image.LINEAR = PIL.Image.BILINEAR
-
-from .extractor import Extractor
-
-
-def is_valid_utf8(s):
-    try:
-        s.encode('utf-8').decode('utf-8')
-        return True
-    except UnicodeEncodeError:
-        return False
-
-
+# Define the TextExtractor class
 class TextExtractor(Extractor):
-    def __init__(self, use_cuda=False):
-        # models available at https://layout-parser.readthedocs.io/en/latest/notes/modelzoo.html
+    """
+    Represents a text extractor for extracting text from a document.
+    """
 
-        self.tesseract_ocr = lp.TesseractAgent(languages='eng')
-        self.doctr_ocr = ocr_predictor(det_arch='db_resnet50', reco_arch='crnn_mobilenet_v3_small', pretrained=True)
-        device = "cpu"
-        if use_cuda and torch.cuda.is_available():
-            self.doctr_ocr.cuda()
-            device = "cuda:0"
+    def __init__(self, use_ocr: bool, lang: str = 'eng):
+        """
+        Initialize a TextExtractor object.
 
-        self.model = lp.Detectron2LayoutModel('lp://PubLayNet/mask_rcnn_X_101_32x8d_FPN_3x/config',
-                                              extra_config=["MODEL.ROI_HEADS.SCORE_THRESH_TEST", 0.8],
-                                              label_map={0: "Text", 1: "Title", 2: "List", 3: "Table", 4: "Figure"},
-                                              device=device)
+        Args:
+            use_ocr (bool): Whether to use OCR for text extraction or not.
+            lang (str): The language of the text. Defaults to english.
 
-    def extract_tesseract(self, segment_image):
-        return self.tesseract_ocr.detect(segment_image)
+        Raises:
+            TypeError: If the types of the arguments are not as expected.
+        """
+        # Verify the input variable types
+        if not isinstance(use_ocr, bool):
+            raise TypeError("use_ocr must be a boolean")
 
-    def extract_doctr(self, segment_image):
-        out = self.doctr_ocr([segment_image])
-        text = []
-        json = out.export()
+        # Initialize OCR settings and OCR model
+        self.use_ocr = use_ocr
+        self.text_ocr = TextOCR(lang)
 
-        for block in json['pages'][0]['blocks']:
-            for line in block['lines']:
-                for word in line['words']:
-                    text.append(word['value'])
-        return ' '.join(text)
+    def process_text_image(self, text_element: TextElement, text_image: Image, pdf_page: Page) -> str:
+        """
+        Process the text image based on OCR settings and equation presence.
 
-    def extract(self, filepath, document, pipeline_step):
-        images = []
-        layouts = []
+        Args:
+            text_element (TextElement): The text element containing the coordinates for extraction.
+            text_image (Image): The cropped text image.
+            pdf_page (Page): The PDF page containing the text element.
 
-        imgs = pdf2image.convert_from_path(filepath)
-        for img in imgs:
-            array_img = np.asarray(img)
-            layout = self.model.detect(array_img)
-            images.append(array_img)
-            layouts.append(layout)
-            document.store_page(img, layout)
+        Returns:
+            str: The extracted text content.
+        """
+        # Use OCR or not based on the use_ocr flag and whether the text element contains equations
+        if self.use_ocr:
+            if text_element.has_equation_inside:
+                return self.text_ocr.get_text_and_equations_with_ocr(text_image)
+            else:
+                return self.text_ocr.get_text_with_ocr(text_image)
+        else:
+            if text_element.has_equation_inside:
+                return self.text_ocr.get_text_and_equations_without_ocr(text_image)
+            else:
+                return self.text_ocr.get_text_without_ocr(text_image, pdf_page)
 
-        for page, img in enumerate(images):
-            image_width = len(img[0])
-            selected_blocks = layouts[page]
+    def extract(self, pdf_page: Page, page_image: Image, text_element: TextElement, page) -> TextElement:
+        """
+        Extracts text from a given page image based on the coordinates in the text element.
 
-            # Sort element ID of the left column based on y1 coordinate
-            left_interval = lp.Interval(0, image_width / 2, axis='x').put_on_canvas(img)
-            left_blocks = selected_blocks.filter_by(left_interval, center=True)._blocks
-            left_blocks.sort(key=lambda b: b.coordinates[1])
+        Args:
+            pdf_page (Page): The PDF page from which to extract the text.
+            page_image (Image): The page image from which to extract the text.
+            text_element (TextElement): The text element containing the coordinates for extraction.
+            page: Additional page context (not used in this example).
 
-            # Sort element ID of the right column based on y1 coordinate
-            right_blocks = [b for b in selected_blocks if b not in left_blocks]
-            right_blocks.sort(key=lambda b: b.coordinates[1])
+        Returns:
+            TextElement: The updated text element with the extracted text content.
 
-            # Sort the overall element ID starts from left column
-            selected_blocks = lp.Layout([b.set(id=idx) for idx, b in enumerate(left_blocks + right_blocks)])
+        Raises:
+            TypeError: If the types of the arguments are not as expected.
+        """
+        # Verify the input variable types
+        if not isinstance(page_image, Image):
+            raise TypeError("page_image must be a PIL.Image object")
+        if not isinstance(text_element, TextElement):
+            raise TypeError("text_element must be a TextElement object")
 
-            for i, block in enumerate(selected_blocks):
-                # Crop image around the detected layout
-                segment_image = (block
-                                 .pad(left=5, right=15, top=5, bottom=5)
-                                 .crop_image(img))
-                rect = block.block
-                x_min, y_min, x_max, y_max = rect.x_1, rect.y_1, rect.x_2, rect.y_2
+        # Extract the coordinates from the text element
+        left = text_element.x_min
+        upper = text_element.y_min
+        right = text_element.x_max
+        lower = text_element.y_max
 
-                if block.type in ['Text', 'Title']:
-                    text = self.extract_doctr(segment_image)
-                    text = text.strip()
-                    style = None
-                    if block.type == 'Title':
-                        style = 'title'
-                    text = TextElement(x_min, y_min, x_max, y_max, 0, text, style)
-                    document.add_element(page, text)
-                elif block.type == 'Figure':
-                    content = PIL.Image.fromarray(segment_image)
-                    image = ImageElement(x_min, y_min, x_max, y_max, pipeline_step, f'img{i}', content, 'png')
-                    document.add_element(page, image)
+        # Crop the image based on the coordinates
+        text_image = page_image.crop((left, upper, right, lower))
 
-    def plot(self, page_number):
-        lp.draw_box(images[page_number], layouts[page_number], box_width=5, box_alpha=0.2)
+        # Process the cropped text image and extract the text content
+        text_content = self.process_text_image(text_element, text_image, pdf_page)
+
+        # Update the text element with the extracted text content
+        text_element.text_content = text_content
+
+        return text_element
+
+    def __str__(self) -> str:
+        """
+        Returns a string representation of the TextExtractor object.
+
+        Returns:
+            str: A string representation of the object.
+        """
+        return f"TextExtractor(use_ocr={self.use_ocr}, text_ocr={self.text_ocr})"
