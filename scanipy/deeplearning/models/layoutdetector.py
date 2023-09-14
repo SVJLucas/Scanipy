@@ -1,4 +1,5 @@
 import PIL
+from typing import Union, List
 from layoutparser.models import Detectron2LayoutModel
 from .elements import TextElement,TitleElement,ImageElement,TableElement
 
