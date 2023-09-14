@@ -12,6 +12,7 @@ class ImageElement(Element):
         unique_key (str): A unique identifier for the image element.
         image_content (Any): The actual content of the image.
         image_extension (str): The file extension for the image (e.g., 'jpg', 'png').
+        has_equation_inside (bool): If there's some equation inside the image
     """
 
     def __init__(self, x_min: int, y_min: int, x_max: int, y_max: int, pipeline_step: Union[int, None] = None):
@@ -39,9 +40,36 @@ class ImageElement(Element):
         super().__init__(x_min, y_min, x_max, y_max, pipeline_step)
 
         # Initialize additional instance variables specific to ImageElement
-        self.unique_key = None
-        self.image_content = None
-        self.image_extension = None
+        self._unique_key = None
+        self._image_content = None
+        self._image_extension = None
+        self._has_equation_inside = False
+    @property
+    def has_equation_inside(self) -> bool:
+        """
+        Determines if the element contains equations.
+    
+        This method checks if the element has any equations inside it and returns a boolean value accordingly.
+    
+        Returns:
+            bool: True if the element contains equations, otherwise False.
+        """
+        return self._has_equation_inside
+
+    @unique_key.setter
+    def has_equation_inside(self, value: bool):
+        """
+        Sets a boolean that checks if the element has any equations inside it.
+
+        Args:
+            value (bool): The new unique key.
+
+        Raises:
+            TypeError: If the provided value is not a bool.
+        """
+        if not isinstance(value, bool):
+            raise TypeError("unique_key must be a bool")
+        self._has_equation_inside = value
 
     @property
     def unique_key(self) -> str:
@@ -121,7 +149,7 @@ class ImageElement(Element):
         Returns:
             str: A string representation of the object.
         """
-        return f"ImageElement(unique_key={self.unique_key}, x_min={self.x_min}, y_min={self.y_min}, x_max={self.x_max}, y_max={self.y_max}, pipeline_step={self.pipeline_step}, image_extension={self.image_extension})"
+        return f"ImageElement(unique_key={self.unique_key}, x_min={self.x_min}, y_min={self.y_min}, x_max={self.x_max}, y_max={self.y_max}, pipeline_step={self.pipeline_step}, image_extension={self.image_extension}, has_equation_inside={self.has_equation_inside})"
 
     def display_image(self):
         """
