@@ -58,7 +58,7 @@ class EquationFinder:
           is_inside_text = bool(equation['type']=='embedding')
 
           # Creating element
-          element = EquationElement(x_min, y_min, x_max, y_max, pipeline_step)
+          element = EquationElement(x_min, y_min, x_max, y_max, pipeline_step, is_inside_text)
 
           # Adding EquationElement in the list
           empty_elements.append(element)
