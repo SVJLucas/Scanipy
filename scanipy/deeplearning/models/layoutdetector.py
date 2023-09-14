@@ -39,8 +39,7 @@ class LayoutDetector:
         
         Args:
             image: The image in which to detect layout elements.
-            pipeline_step: An optional integer representing the step in a pipeline.
-                           Default is None.
+            pipeline_step: An optional integer representing the step in a pipeline. Defaults to None.
         
         Returns:
             elements: A list of detected layout elements.
