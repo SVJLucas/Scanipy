@@ -113,6 +113,15 @@ class ImageElement(Element):
             raise TypeError("image_extension must be a string")
         self._image_extension = value
 
+    def __str__(self) -> str:
+        """
+        Returns a string representation of the ImageElement object.
+    
+        Returns:
+            str: A string representation of the object.
+        """
+        return f"ImageElement(unique_key={self.unique_key}, x_min={self.x_min}, y_min={self.y_min}, x_max={self.x_max}, y_max={self.y_max}, pipeline_step={self.pipeline_step}, image_extension={self.image_extension})"
+
     def generate_markdown(self, output_directory) -> str:
         """
         Generate the Markdown representation of the image element and save the image to a file.
