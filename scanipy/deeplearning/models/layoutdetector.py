@@ -33,19 +33,25 @@ class LayoutDetector:
             device=device
         )
 
-    def __call__(self, image: PIL.Image) -> List[Union[TextElement, TitleElement, ImageElement, TableElement]]:
+    def __call__(self, image: PIL.Image, pipeline_step: Union[int, None] = None) -> List[Union[TextElement, TitleElement, ImageElement, TableElement]]:
         """
         Detects layout elements in the given image and returns them as a list.
         
         Args:
             image: The image in which to detect layout elements.
-            
+            pipeline_step: An optional integer representing the step in a pipeline.
+                           Default is None.
+        
         Returns:
             elements: A list of detected layout elements.
         """
         # Verify the type of the image argument
         if not isinstance(image, PIL.Image.Image):
             raise TypeError("Image must be a PIL.Image object.")
+        
+        # Verify the type of the pipeline_step argument
+        if not (isinstance(pipeline_step, int) or pipeline_step is None):
+            raise TypeError("pipeline_step must be an integer or None.")
         
         # Perform layout detection on the image and convert the result to a DataFrame
         layout = self.model.detect(image).to_dataframe()
@@ -61,17 +67,18 @@ class LayoutDetector:
             # Use pattern matching to identify the type of the block and create the corresponding element
             match block.type:
                 case "Text":
-                    element = TextElement(x_min, y_min, x_max, y_max)
+                    element = TextElement(x_min, y_min, x_max, y_max, pipeline_step)
                 case "Title":
-                    element = TitleElement(x_min, y_min, x_max, y_max)
+                    element = TitleElement(x_min, y_min, x_max, y_max, pipeline_step)
                 case "Figure":
-                    element = ImageElement(x_min, y_min, x_max, y_max)
+                    element = ImageElement(x_min, y_min, x_max, y_max, pipeline_step)
                 case "Table":
-                    element = TableElement(x_min, y_min, x_max, y_max)
+                    element = TableElement(x_min, y_min, x_max, y_max, pipeline_step)
             
             # Append the detected element to the list
             elements.append(element)
         
         # Return the list of detected elements
         return elements
+
 
