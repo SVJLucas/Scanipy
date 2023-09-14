@@ -12,7 +12,7 @@ class ImageElement(Element):
         unique_key (str): A unique identifier for the image element.
         image_content (Any): The actual content of the image.
         image_extension (str): The file extension for the image (e.g., 'jpg', 'png').
-        has_equation_inside (bool): If there's some equation inside the image
+        has_equation_inside (bool): If there's some equation inside the image.
     """
 
     def __init__(self, x_min: int, y_min: int, x_max: int, y_max: int, pipeline_step: Union[int, None] = None):
