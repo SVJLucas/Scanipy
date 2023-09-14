@@ -1,6 +1,6 @@
 import PIL
 from layoutparser.models import Detectron2LayoutModel
-from elements import TextElement,TitleElement,ImageElement,TableElement
+from .elements import TextElement,TitleElement,ImageElement,TableElement
 
 
 class LayoutDetector:
