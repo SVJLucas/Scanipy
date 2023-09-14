@@ -64,7 +64,7 @@ class ImageExtractor(Extractor):
         if not isinstance(page_image, Image):
             raise TypeError("page_image must be a PIL.Image object")
         if not isinstance(image_element, ImageElement):
-            raise TypeError("equation_element must be an EquationElement object")
+            raise TypeError("image_element must be an ImageElement object")
         if not isinstance(unique_key, str) and unique_key is not None:
             raise TypeError("unique_key must be an string or None")
         if not isinstance(image_extension, str) and image_extension is not None:
