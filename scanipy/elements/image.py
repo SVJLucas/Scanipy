@@ -123,6 +123,22 @@ class ImageElement(Element):
         """
         return f"ImageElement(unique_key={self.unique_key}, x_min={self.x_min}, y_min={self.y_min}, x_max={self.x_max}, y_max={self.y_max}, pipeline_step={self.pipeline_step}, image_extension={self.image_extension})"
 
+    def display_image(self):
+        """
+        Display the image content using Matplotlib.
+
+        Raises:
+            ValueError: If image_content is None or not properly set.
+        """
+        if self.image_content is None:
+            raise ValueError("image_content is not set")
+
+        # Assuming image_content has format compatible with imshow
+        plt.imshow(self.image_content)
+        plt.title(f"Image: {self.unique_key}")
+        plt.axis('off')  # Turn off axis numbers and ticks
+        plt.show()
+
     def generate_markdown(self, output_directory) -> str:
         """
         Generate the Markdown representation of the image element and save the image to a file.
