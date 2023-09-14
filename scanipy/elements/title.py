@@ -8,6 +8,7 @@ class TitleElement(Element):
 
     Attributes:
         title_content (str): The content of the title element.
+        has_equation_inside (bool): If there's some equation inside the title.
     """
 
     def __init__(self, x_min: int, y_min: int, x_max: int, y_max: int, 
@@ -36,7 +37,35 @@ class TitleElement(Element):
 
         # Initialize additional instance variable specific to TitleElement
         self._title_content = None
+        self._has_equation_inside = False
 
+    @property
+    def has_equation_inside(self) -> bool:
+        """
+        Determines if the element contains equations.
+    
+        This method checks if the element has any equations inside it and returns a boolean value accordingly.
+    
+        Returns:
+            bool: True if the element contains equations, otherwise False.
+        """
+        return self._has_equation_inside
+
+    @has_equation_inside.setter
+    def has_equation_inside(self, value: bool):
+        """
+        Sets a boolean that checks if the element has any equations inside it.
+
+        Args:
+            value (bool): The new boolean value.
+
+        Raises:
+            TypeError: If the provided value is not a bool.
+        """
+        if not isinstance(value, bool):
+            raise TypeError("has_equation_inside must be a bool")
+        self._has_equation_inside = value
+        
     # Setter and Getter for title_content
     @property
     def title_content(self) -> Union[str, None]:
@@ -70,7 +99,7 @@ class TitleElement(Element):
         Returns:
             str: A string representation of the object.
         """
-        return f"TitleElement(x_min={self.x_min}, y_min={self.y_min}, x_max={self.x_max}, y_max={self.y_max}, pipeline_step={self.pipeline_step}, title_content={self.title_content})"
+        return f"TitleElement(x_min={self.x_min}, y_min={self.y_min}, x_max={self.x_max}, y_max={self.y_max}, pipeline_step={self.pipeline_step}, title_content={self.title_content}, has_equation_inside={self.has_equation_inside})"
 
     def generate_markdown(self, output_directory: str) -> str:
         """
