@@ -8,9 +8,11 @@ import matplotlib.pyplot as plt
 from scanipy.elements import TextElement, ImageElement
 
 PIL.Image.LINEAR = PIL.Image.BILINEAR
+DPI = 200
+IMAGE_TO_FITZ_CONSTANT = 72 / DPI
 
 from .extractor import Extractor
-
+import fitz
 
 def is_valid_utf8(s):
     try:
@@ -50,11 +52,20 @@ class TextExtractor(Extractor):
                     text.append(word['value'])
         return ' '.join(text)
 
+    def extract_pdf(self, page, x_min, y_min, x_max, y_max):
+        dimensions = [x_min, y_min, x_max, y_max]
+        dimensions = [d*IMAGE_TO_FITZ_CONSTANT for d in dimensions]
+        crop_rect = fitz.Rect(*dimensions)
+        text = page.get_text("text", clip=crop_rect).strip().replace('\n', ' ')
+        return text
+
     def extract(self, filepath, document, pipeline_step):
         images = []
         layouts = []
 
         imgs = pdf2image.convert_from_path(filepath)
+        pdf_file = fitz.open(filepath)
+
         for img in imgs:
             array_img = np.asarray(img)
             layout = self.model.detect(array_img)
@@ -87,7 +98,7 @@ class TextExtractor(Extractor):
                 x_min, y_min, x_max, y_max = rect.x_1, rect.y_1, rect.x_2, rect.y_2
 
                 if block.type in ['Text', 'Title']:
-                    text = self.extract_doctr(segment_image)
+                    text = self.extract_pdf(pdf_file[page], x_min, y_min, x_max, y_max)
                     text = text.strip()
                     style = None
                     if block.type == 'Title':

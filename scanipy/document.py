@@ -27,7 +27,6 @@ class Document:
         if not os.path.exists(output_folder):
             os.makedirs(output_folder)
         output = ""
-        print(self.elements)
         sorted_pages = sorted(list(self.elements.keys()))
         for page in sorted_pages:
             sorted_elements = self.get_ordered_elements(page)
