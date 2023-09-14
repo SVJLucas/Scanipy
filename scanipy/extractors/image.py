@@ -43,7 +43,7 @@ class ImageExtractor(Extractor):
 
         return random_string
 
-    def extract(self, page_image: Image, image_element: ImageElement, unique_key: Union[str, None] = None) -> ImageElement:
+    def extract(self, page_image: Image, image_element: ImageElement, unique_key: Union[str, None] = None, image_extension: str = 'png' ) -> ImageElement:
         """
         Extracts an image from a given page image based on the coordinates in the image element.
 
@@ -51,6 +51,7 @@ class ImageExtractor(Extractor):
             page_image (PIL.Image): The page image from which to extract the image.
             image_element (ImageElement): The image element containing the coordinates for extraction.
             unique_key (Union[str, None], optional): A unique key for the image. If None, a random unique key will be generated.
+            image_extension (str): The extension of the image. Defauls to be 'png'.
 
         Returns:
             ImageElement: The updated image element with the extracted image content.
@@ -81,6 +82,7 @@ class ImageExtractor(Extractor):
         # Update the image element with the extracted image content and unique key
         image_element.image_content = image_content
         image_element.unique_key = unique_key
+        image_element.image_extension  = image_extension
 
         return image_element
 
