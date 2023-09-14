@@ -1,6 +1,7 @@
-from typing import Union, Any
-from .element import Element
 import os
+from .element import Element
+from typing import Union, Any
+import matplotlib.pyplot as plt
 
 # Define the ImageElement class, which inherits from the Element class
 class ImageElement(Element):
