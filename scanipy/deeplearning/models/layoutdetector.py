@@ -42,7 +42,7 @@ class LayoutDetector:
             pipeline_step: An optional integer representing the step in a pipeline. Defaults to None.
         
         Returns:
-            elements: A list of detected layout elements.
+            empty_elements: A list of detected layout elements, but only with its positions (no extracted content yet).
         """
         # Verify the type of the image argument
         if not isinstance(image, PIL.Image.Image):
@@ -56,7 +56,7 @@ class LayoutDetector:
         layout = self.model.detect(image).to_dataframe()
         
         # Initialize an empty list to store detected elements
-        elements = []
+        empty_elements = []
         
         # Iterate through each block in the DataFrame
         for _, block in layout.iterrows():
@@ -78,6 +78,6 @@ class LayoutDetector:
             elements.append(element)
         
         # Return the list of detected elements
-        return elements
+        return empty_elements
 
 
