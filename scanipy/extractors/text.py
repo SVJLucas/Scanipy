@@ -45,14 +45,14 @@ class TextExtractor(Extractor):
         # Use OCR or not based on the use_ocr flag and whether the text element contains equations
         if self.use_ocr:
             if text_element.has_equation_inside:
-                return self.text_ocr.get_text_and_equations_with_ocr(text_image)
+                return self.text_ocr.get_text_and_equations_with_ocr(text_element, text_image)
             else:
-                return self.text_ocr.get_text_with_ocr(text_image)
+                return self.text_ocr.get_text_with_ocr(text_element, text_image)
         else:
             if text_element.has_equation_inside:
-                return self.text_ocr.get_text_and_equations_without_ocr(text_image, pdf_page)
+                return self.text_ocr.get_text_and_equations_without_ocr(text_element, text_image, pdf_page)
             else:
-                return self.text_ocr.get_text_without_ocr(text_image, pdf_page)
+                return self.text_ocr.get_text_without_ocr(text_element, text_image, pdf_page)
 
     def extract(self, pdf_page: Page, page_image: Image, text_element: TextElement, page) -> TextElement:
         """
