@@ -56,19 +56,19 @@ class ImageElement(Element):
         """
         return self._has_equation_inside
 
-    @unique_key.setter
+    @has_equation_inside.setter
     def has_equation_inside(self, value: bool):
         """
         Sets a boolean that checks if the element has any equations inside it.
 
         Args:
-            value (bool): The new unique key.
+            value (bool): The new boolean value.
 
         Raises:
             TypeError: If the provided value is not a bool.
         """
         if not isinstance(value, bool):
-            raise TypeError("unique_key must be a bool")
+            raise TypeError("has_equation_inside must be a bool")
         self._has_equation_inside = value
 
     @property
