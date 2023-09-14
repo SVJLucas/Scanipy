@@ -8,7 +8,7 @@ class TextElement(Element):
 
     Attributes:
         text_content (str): The content of the text element.
-        has_equation_inside (bool): If there's some equation inside the text
+        has_equation_inside (bool): If there's some equation inside the text.
         
     """
 
