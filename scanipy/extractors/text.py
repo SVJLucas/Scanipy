@@ -50,7 +50,7 @@ class TextExtractor(Extractor):
                 return self.text_ocr.get_text_with_ocr(text_image)
         else:
             if text_element.has_equation_inside:
-                return self.text_ocr.get_text_and_equations_without_ocr(text_image)
+                return self.text_ocr.get_text_and_equations_without_ocr(text_image, pdf_page)
             else:
                 return self.text_ocr.get_text_without_ocr(text_image, pdf_page)
 
