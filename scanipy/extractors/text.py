@@ -93,7 +93,15 @@ class TextExtractor(Extractor):
                     if block.type == 'Title':
                         style = 'title'
                     text = TextElement(x_min, y_min, x_max, y_max, 0, text, style)
-                    document.add_element(page, text)
+
+                    isolated_check = True
+                    for element in document.elements.get(page, []):
+                        if text.is_in(element):
+                            isolated_check = False
+                            break
+                    if isolated_check:
+                        document.add_element(page, text)
+
                 elif block.type == 'Figure':
                     content = PIL.Image.fromarray(segment_image)
                     image = ImageElement(x_min, y_min, x_max, y_max, pipeline_step, f'img{i}', content, 'png')

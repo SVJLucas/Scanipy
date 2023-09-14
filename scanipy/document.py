@@ -1,9 +1,8 @@
 import os
 import layoutparser as lp
 import numpy as np
-from .elements import TableElement, TextElement, ImageElement
+from scanipy.elements import TableElement, TextElement, ImageElement, EquationElement
 import matplotlib.pyplot as plt
-
 
 class Document:
     """
@@ -48,7 +47,24 @@ class Document:
             self.elements[page] = []
         self.elements[page].append(element)
 
-    def visualize_pipeline(self, page=0, step=0):
+    def visualize_pipeline(self, page=0, step=None):
+        if step is None:
+            element_type_map = {
+                TextElement: 4,
+                ImageElement: 3,
+                TableElement: 2,
+                EquationElement: 1,
+            }
+            parsed_els = []
+            for el in self.elements[page]:
+                el_type = element_type_map[type(el)]
+                if type(el) is TextElement and el.style == 'title':
+                    el_type = 0
+                parsed_els.append(
+                    lp.TextBlock(lp.Rectangle(el.x_min, el.y_min, el.x_max, el.y_max), type=el_type)
+                )
+            return lp.draw_box(self.images[page], lp.Layout(parsed_els), box_width=5, box_alpha=0.2)
+
         if step == 0:
             return lp.draw_box(self.images[page], self.layouts[page], box_width=5, box_alpha=0.2)
         if step == 1:
