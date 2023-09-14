@@ -73,7 +73,7 @@ class ImageExtractor(Extractor):
             while unique_key in self.unique_keys:
                 unique_key = self.generate_random_string()
         elif unique_key in self.unique_keys:
-            raise TypeError("unique_key must be unique")
+            raise TypeError("The parameters unique_key must be unique.")
 
         # Update the image element with the extracted image content and unique key
         image_element.image_content = image_content
