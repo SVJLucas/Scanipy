@@ -9,6 +9,7 @@ class TableElement(Element):
 
     Attributes:
         table_data (pandas.DataFrame): The DataFrame containing the tabular data.
+        has_equation_inside (bool): If there's some equation inside the table.
     """
 
     def __init__(self, x_min: int, y_min: int, x_max: int, y_max: int, 
@@ -37,7 +38,35 @@ class TableElement(Element):
 
         # Initialize additional instance variable specific to TableElement
         self._table_data = None
+        self._has_equation_inside = False
 
+    @property
+    def has_equation_inside(self) -> bool:
+        """
+        Determines if the element contains equations.
+    
+        This method checks if the element has any equations inside it and returns a boolean value accordingly.
+    
+        Returns:
+            bool: True if the element contains equations, otherwise False.
+        """
+        return self._has_equation_inside
+
+    @unique_key.setter
+    def has_equation_inside(self, value: bool):
+        """
+        Sets a boolean that checks if the element has any equations inside it.
+
+        Args:
+            value (bool): The new unique key.
+
+        Raises:
+            TypeError: If the provided value is not a bool.
+        """
+        if not isinstance(value, bool):
+            raise TypeError("unique_key must be a bool")
+        self._has_equation_inside = value
+        
     # Setter and Getter for table_data
     @property
     def table_data(self) -> Union[pd.DataFrame, None]:
@@ -71,7 +100,7 @@ class TableElement(Element):
         Returns:
             str: A string representation of the object.
         """
-        return f"TableElement(x_min={self.x_min}, y_min={self.y_min}, x_max={self.x_max}, y_max={self.y_max}, pipeline_step={self.pipeline_step}, table_data={self.table_data})"
+        return f"TableElement(x_min={self.x_min}, y_min={self.y_min}, x_max={self.x_max}, y_max={self.y_max}, pipeline_step={self.pipeline_step}, table_data={self.table_data}, has_equation_inside={self.has_equation_inside})"
 
     def generate_markdown(self, output_directory: str) -> str:
         """
