@@ -19,7 +19,7 @@ class Parser:
         :param path: The path to the PDF file to parse.
         """
         self.table_extractor = TableDataExtractor()
-        self.text_extractor = TextExtractor()
+        self.text_extractor = TextExtractor(use_cuda=True)
         self.equation_extractor = EquationExtractor()
         self.pipeline = [self.text_extractor, self.table_extractor, self.equation_extractor]
 

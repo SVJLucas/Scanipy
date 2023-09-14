@@ -21,15 +21,15 @@ def is_valid_utf8(s):
 
 
 class TextExtractor(Extractor):
-    def __init__(self):
+    def __init__(self, use_cuda=False):
         # models available at https://layout-parser.readthedocs.io/en/latest/notes/modelzoo.html
 
         self.tesseract_ocr = lp.TesseractAgent(languages='eng')
         self.doctr_ocr = ocr_predictor(det_arch='db_resnet50', reco_arch='crnn_mobilenet_v3_small', pretrained=True)
         device = "cpu"
-        # if torch.cuda.is_available():
-        #     self.doctr_ocr.cuda()
-        #     device = "cuda:0"
+        if use_cuda and torch.cuda.is_available():
+            self.doctr_ocr.cuda()
+            device = "cuda:0"
 
         self.model = lp.Detectron2LayoutModel('lp://PubLayNet/mask_rcnn_X_101_32x8d_FPN_3x/config',
                                               extra_config=["MODEL.ROI_HEADS.SCORE_THRESH_TEST", 0.8],
