@@ -1,5 +1,6 @@
 from typing import Union
 from PIL import Image
+from fitz import Page
 from scanipy.deeplearning.models import TableStructureAnalyzer
 from scanipy.elements import TableElement
 from .extractor import Extractor
@@ -123,7 +124,7 @@ class TableDataExtractor(Extractor):
         # Create white image
         padded_image = np.ones((padded_height, padded_width, 3), dtype=np.uint8) * 255
 
-        # Paste the original image onto the canvas with padding
+        # Paste the original image onto the canvas with padding 
         padded_image[pad:pad + height, pad:pad + width] = image_cv
 
         return padded_image
@@ -206,7 +207,7 @@ class TableDataExtractor(Extractor):
 
         return text
 
-    def extract(self, page_image: Image, table_element: TableElement) -> TableElement:
+    def extract(self, pdf_page: Page, page_image: Image.Image, table_element: TableElement) -> TableElement:
         """
         Extracts an table from a given page image based on the coordinates in the table element.
 

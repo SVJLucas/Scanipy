@@ -1,7 +1,9 @@
 import PIL
+from PIL import Image, ImageDraw
+import fitz
 from typing import Union, List
 from layoutparser.models import Detectron2LayoutModel
-from scanipy.elements import TextElement,TitleElement,ImageElement,TableElement
+from scanipy.elements import TextElement,TitleElement,ImageElement,TableElement,EquationElement
 
 
 class LayoutDetector:
@@ -15,7 +17,7 @@ class LayoutDetector:
         model: The Detectron2 model for layout detection.
     """
 
-    def __init__(self, device):
+    def __init__(self, device='cpu'):
         """
         Initializes the LayoutDetector class with a given device.
         
@@ -55,6 +57,7 @@ class LayoutDetector:
         
         # Perform layout detection on the image and convert the result to a DataFrame
         layout = self.model.detect(image).to_dataframe()
+        # print(layout)
         
         # Initialize an empty list to store detected elements
         elements = []
@@ -65,7 +68,10 @@ class LayoutDetector:
             x_min, y_min, x_max, y_max = block.x_1, block.y_1, block.x_2, block.y_2
             
             # Use pattern matching to identify the type of the block and create the corresponding element
+            element = None # Make sure that a new element is assigned
             match block.type:
+                case "List": #TODO
+                    element = TextElement(x_min, y_min, x_max, y_max, pipeline_step)
                 case "Text":
                     element = TextElement(x_min, y_min, x_max, y_max, pipeline_step)
                 case "Title":
@@ -74,11 +80,38 @@ class LayoutDetector:
                     element = ImageElement(x_min, y_min, x_max, y_max, pipeline_step)
                 case "Table":
                     element = TableElement(x_min, y_min, x_max, y_max, pipeline_step)
-            
+                case "Equation":
+                    element = EquationElement(x_min, y_min, x_max, y_max, pipeline_step)
             # Append the detected element to the list
             elements.append(element)
         
         # Return the list of detected elements
         return elements
 
+    # Debug Function
+    def draw_rectangle(self, image, x1, y1, x2, y2, outline_color=(255, 0, 0), thickness=2):
+        """Draw a rectangle on a PIL Image.
+
+        Args:
+            image (PIL.Image.Image): The input PIL Image.
+            x1 (int): The x-coordinate of the top-left corner.
+            y1 (int): The y-coordinate of the top-left corner.
+            x2 (int): The x-coordinate of the bottom-right corner.
+            y2 (int): The y-coordinate of the bottom-right corner.
+            outline_color (tuple): The outline color as an RGB tuple (default is red).
+            thickness (int): The outline thickness (default is 2).
+
+        Returns:
+            PIL.Image.Image: A new PIL Image with the rectangle drawn.
+        """
+        # Create a copy of the input image to avoid modifying the original
+        image_copy = image.copy()
+        
+        # Create a drawing context on the copy of the image
+        draw = ImageDraw.Draw(image_copy)
+
+        # Draw the rectangle
+        draw.rectangle([x1, y1, x2, y2], outline=outline_color, width=thickness)
+
+        return image_copy
 

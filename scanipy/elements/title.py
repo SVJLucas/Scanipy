@@ -34,7 +34,7 @@ class TitleElement(Element):
         super().__init__(x_min, y_min, x_max, y_max, pipeline_step)
 
         # Initialize additional instance variable specific to TitleElement
-        self._title_content = None
+        self._text_content = None
         self._has_equation_inside = False
 
     @property
@@ -66,17 +66,17 @@ class TitleElement(Element):
         
     # Setter and Getter for title_content
     @property
-    def title_content(self) -> Union[str, None]:
+    def text_content(self) -> Union[str, None]:
         """
         Gets the content of the title element.
 
         Returns:
             Union[str, None]: The content of the title element.
         """
-        return self._title_content
+        return self._text_content
 
-    @title_content.setter
-    def title_content(self, value: Union[str, None]):
+    @text_content.setter
+    def text_content(self, value: Union[str, None]):
         """
         Sets the content of the title element.
 
@@ -88,7 +88,7 @@ class TitleElement(Element):
         """
         if value is not None and not isinstance(value, str):
             raise TypeError("title_content must be a string or None")
-        self._title_content = value
+        self._text_content = value
 
     def __str__(self) -> str:
         """
@@ -97,7 +97,7 @@ class TitleElement(Element):
         Returns:
             str: A string representation of the object.
         """
-        return f"TitleElement(x_min={self.x_min}, y_min={self.y_min}, x_max={self.x_max}, y_max={self.y_max}, pipeline_step={self.pipeline_step}, title_content={self.title_content}, has_equation_inside={self.has_equation_inside})"
+        return f"TitleElement(x_min={self.x_min}, y_min={self.y_min}, x_max={self.x_max}, y_max={self.y_max}, pipeline_step={self.pipeline_step}, title_content={self.text_content}, has_equation_inside={self.has_equation_inside})"
 
     def generate_markdown(self, output_directory: str) -> str:
         """
@@ -110,5 +110,5 @@ class TitleElement(Element):
             str: Markdown representation of the title element.
         """
         # Add Markdown header formatting to the title content
-        formatted_title = '## ' + self.title_content + '\n\n'
+        formatted_title = '## ' + self.text_content + '\n\n'
         return formatted_title
