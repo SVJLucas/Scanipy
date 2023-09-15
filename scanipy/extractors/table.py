@@ -1,173 +1,39 @@
-import cv2
-import numpy as np
-import pandas as pd
+from typing import Union
 from PIL import Image
-from typing import List, Dict
-import matplotlib.pyplot as plt
-import fitz
-import pytesseract
-
-from math import ceil, floor
-from scanipy.deeplearning.models import TableStructureAnalyzer, TableFinder
+from scanipy.deeplearning.models import TableStructureAnalyzer
 from scanipy.elements import TableElement
-import pdf2image
-
 from .extractor import Extractor
 
-DPI = 200
-IMAGE_TO_FITZ_CONSTANT = 72 / DPI
+from math import ceil, floor
+import numpy as np
+import pandas as pd
+import cv2
+import pytesseract
 
-
+# Define the TableDataExtractor class
 class TableDataExtractor(Extractor):
     """
-    A class to manage the extraction of tables from images.
+    Represents an table extractor for extracting tables from a document.
 
     Attributes:
-        _table_finder (callable): Model for identifying tables in images.
-        _structure_analyzer (callable): Model for table structure analysis.
-        _confidence_threshold (float): Confidence score threshold for filtering detected tables.
+        latex_ocr (str): Deep Learning Model to extract tables from images.
     """
 
-    def __init__(self, confidence_threshold=0.990, expansion_margin=10, threshold_percentage=0.10):
+    def __init__(self, table_expansion_margin=10, threshold_percentage=0.10):
         """
-        Initializes TableDataExtractor with structure and detection models and a confidence threshold.
-
-        Args:
-            confidence_threshold (float, optional): Confidence score threshold for table detection. Defaults to 0.990.
+        Initialize an TableDataExtractor object.
         """
-        # Initialize table detection and structure analysis models
-        self._table_finder = TableFinder()
-        self._structure_analyzer = TableStructureAnalyzer()
-
-        # Set the confidence threshold for table detection
-        self._confidence_threshold = confidence_threshold
+        # Initialize the model for identifying table structures
+        self.model = TableStructureAnalyzer()
 
         # Expand the bounding box slightly for better cropping
-        self._expansion_margin = expansion_margin
+        self._table_expansion_margin = table_expansion_margin
+
         # Use a percentage (e.g., 10%) of the average height as the threshold for a new row
         self._threshold_percentage = threshold_percentage
+        self.test = []
 
-    def _detect_tables(self, image):
-        """
-        Detect tables in a given image and filter them based on the confidence score.
-
-        Args:
-            image (PIL.Image): The input image in which to detect tables.
-
-        Returns:
-            List[Dict]: Detected tables along with bounding boxes, filtered by confidence score.
-        """
-        # Detect tables in the image using the table finder model
-        detected_tables = self._table_finder(image)
-
-        # Filter tables based on the confidence score threshold
-        filtered_tables = [table for table in detected_tables if table['score'] >= self._confidence_threshold]
-
-        return filtered_tables
-
-    def visualize_tables(self, image):
-        """
-        Display the image with bounding boxes around detected tables.
-
-        Args:
-            image (PIL.Image): The input image in which tables were detected.
-        """
-
-        # Get the bounding boxes of detected tables
-        detected_tables = self._detect_tables(image)
-
-        # Create a matplotlib figure and axis for visualization
-        fig, ax = plt.subplots(1)
-
-        # Display the RGB image
-        ax.imshow(image)
-
-        # Loop through each detected table to draw its bounding box
-        for table in detected_tables:
-            xmin, ymin, xmax, ymax = table['box'].values()
-
-            # Create a red rectangle around the table
-            rect = plt.Rectangle((xmin, ymin), xmax - xmin, ymax - ymin, linewidth=1, edgecolor='r', facecolor='none')
-
-            # Add the rectangle to the plot
-            ax.add_patch(rect)
-
-            # Add label and confidence score
-            label = f"{table['label']} ({table['score']:.2f})"
-            plt.text(xmin, ymin, label, color='white', fontsize=12, bbox=dict(facecolor='red', alpha=0.5))
-
-        # Hide axes and show the plot
-        plt.axis('off')
-        plt.show()
-
-    def _extract_table_regions(self, image, detected_tables):
-        """
-        Crop and extract table regions from the image.
-
-        Args:
-            image (PIL.Image): The input PIL image.
-            detected_tables (List[Dict]): The bounding boxes around the detected tables.
-
-        Returns:
-            List[Dict]:
-
-                Dict keys:
-                    'table':cropped table regions as PIL images.
-                    'xmin':
-                    'ymin':
-                    'xmax':
-                    'ymax'
-        """
-        # Convert PIL image to OpenCV format
-        image_cv = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
-
-        # Get image dimensions
-        img_height, img_width = image_cv.shape[:2]
-
-        # Initialize a list to store cropped table images
-        cropped_tables = []
-
-        # Loop through each detected table's bounding box to crop it from the original image
-        for box in detected_tables:
-            xmin, ymin, xmax, ymax = box['box'].values()
-
-            # Expand the bounding box slightly for better cropping
-            xmin, ymin = max(0, xmin - self._expansion_margin), max(0, ymin - self._expansion_margin)
-            xmax, ymax = min(img_width, xmax + self._expansion_margin), min(img_height, ymax + self._expansion_margin)
-
-            # Crop the table from the original image
-            table_region = image_cv[ymin:ymax, xmin:xmax]
-
-            # Convert the cropped table back to a PIL Image
-            table_pil = Image.fromarray(cv2.cvtColor(table_region, cv2.COLOR_BGR2RGB))
-
-            # Append the cropped table and its position to the list
-            cropped_tables.append({'table': table_pil,
-                                   'xmin': xmin,
-                                   'ymin': ymin,
-                                   'xmax': xmax,
-                                   'ymax': ymax})
-
-        return cropped_tables
-
-    def _analyze_structure(self, table):
-        """
-        Analyzes the structure of a table in the image.
-
-        Args:
-            table (PIL.Image): The (cropped) table image.
-
-        Returns:
-            table_structure (List[Dict]): List of rows and columns with their bounding boxes.
-        """
-        # Run structure recognition on the table image
-        # plt.imshow(table)
-        # plt.show()
-        # print(len(self._detect_tables(table)))
-        analyzed_structure = self._structure_analyzer(table)
-        return analyzed_structure
-
-    def _get_cell_coordinates(self, analyzed_structure, x0=0, y0=0):
+    def _get_cell_coordinates(self, page_image, table_element):
         """
         Obtains the coordinates of cells based on the analyzed table structure.
 
@@ -177,14 +43,36 @@ class TableDataExtractor(Extractor):
         Returns:
             List[Dict]: List of cell coordinates.
         """
+        # Convert PIL image to OpenCV format
+        image_cv = cv2.cvtColor(np.array(page_image), cv2.COLOR_RGB2BGR)
+
+        # Get image dimensions
+        img_height, img_width = image_cv.shape[:2]
+
+        # Expand the bounding box slightly for better cropping
+        xmin, ymin = max(0, table_element.x_min - self._table_expansion_margin), max(0, table_element.y_min - self._table_expansion_margin)
+        xmax, ymax = min(img_width, table_element.x_max + self._table_expansion_margin), min(img_height, table_element.y_max + self._table_expansion_margin)
+
+        # Crop the image based on the coordinates
+        table_image = page_image.crop((xmin, ymin, xmax, ymax))
+
+        # Extract the structure from the cropped table image
+        table_structure = self.model(table_image)
+        
+        # For some reason, this improves the cell boxes #FIXME
+        for box in table_structure:
+            box['box']['ymax'] =  box['box']['ymax'] + 5
+
         # Extract row and column bounding boxes from the table structure
-        rows = [box['box'] for box in analyzed_structure if box['label'] == 'table row']
-        columns = [box['box'] for box in analyzed_structure if box['label'] == 'table column']
+        rows = [box['box'] for box in table_structure if box['label'] == 'table row']
+        columns = [box['box'] for box in table_structure if box['label'] == 'table column']
+
 
         # Initialize a list to store cell positions
         cells = []
 
         # Loop through each row and column to find overlapping regions as cells
+        #TODO: adapt for different table layouts
         for row in rows:
             for column in columns:
                 cell_xmin = max(row['xmin'], column['xmin'])
@@ -195,158 +83,166 @@ class TableDataExtractor(Extractor):
                 # Add the cell only if it has a non-zero area
                 if cell_xmin < cell_xmax and cell_ymin < cell_ymax:
                     cells.append({
-                        'xmin': x0 + cell_xmin,
-                        'ymin': y0 + cell_ymin,
-                        'xmax': x0 + cell_xmax,
-                        'ymax': y0 + cell_ymax
+                        'xmin': xmin + cell_xmin,
+                        'ymin': ymin + cell_ymin,
+                        'xmax': xmin + cell_xmax,
+                        'ymax': ymin + cell_ymax
                     })
         # print(cells)
         return cells
+    
+    def _get_dataframe(self, rows, page_image):
+        # Initialize an empty DataFrame
+        df = pd.DataFrame()
 
-    def _extract_cell_coordinates_from_image(self, input_image):
+        # Populate the DataFrame
+        for row_idx, row_boxes in enumerate(rows):
+            row_data = []
+            for col_idx, box in enumerate(row_boxes):
+                image_cv = cv2.cvtColor(np.array(page_image), cv2.COLOR_RGB2BGR)
+                text = self.get_text_from_image(image_cv, box)
+                row_data.append(text)
 
-        """
-        Extracts the coordinates of cells from tables present in the image.
+            # If it's the first row, set the DataFrame columns
+            if row_idx == 0:
+                df = pd.DataFrame(columns=row_data)
+            else:
+                df.loc[row_idx - 1] = row_data
+        
+        return df
+    
+    def _pad_image_with_white(self, image_cv, pad):
 
-        Args:
-            input_image: The image from which to extract table cell coordinates.
+        # Get the dimensions of the original image
+        height, width, _ = image_cv.shape
 
-        Returns:
-            List[List[Dict]]: A nested list of dictionaries, each containing the coordinates of cells for each detected table.
+        # Calculate the dimensions of the new padded image
+        padded_height = height + pad + pad
+        padded_width = width + pad + pad
 
-        Example:
-            >>> extractor = TableDataExtractor()
-            >>> extractor.extract_cell_coordinates_from_image(image)
-            [
-                [{'xmin': 0, 'ymin': 0, 'xmax': 10, 'ymax': 10}, ...],
-                ...
-            ]
-        """
+        # Create white image
+        padded_image = np.ones((padded_height, padded_width, 3), dtype=np.uint8) * 255
 
-        # Initialize a list to hold cell coordinates for each table
-        all_tables_cell_coordinates = []
+        # Paste the original image onto the canvas with padding
+        padded_image[pad:pad + height, pad:pad + width] = image_cv
 
-        # Detect tables present in the image
-        detected_tables = self._detect_tables(input_image)
+        return padded_image
+    
+    def _remove_table_lines(self, image_cv):
+        # Convert to grayscale
+        image_cv_gray = cv2.cvtColor(image_cv, cv2.COLOR_BGR2GRAY)
 
-        # Crop the regions of the image that contain tables
-        cropped_table_images = self._extract_table_regions(input_image, detected_tables)
+        # Use Hough Line Transform to detect lines
+        edges = cv2.bitwise_not(image_cv_gray).astype('uint8')
+        lines = cv2.HoughLines(edges, 1, np.pi / 180, 150)
 
-        # Loop through each cropped table image
-        for single_table_crop_dict in cropped_table_images:
-            single_table_crop = single_table_crop_dict['table']
-            xmin = single_table_crop_dict['xmin']
-            ymin = single_table_crop_dict['ymin']
+        # Draw the detected lines on a copy of the original image
+        cleaned_image = image_cv.copy()
+        if lines is not None:
+            for line in lines:
+                rho, theta = line[0]
+                a = np.cos(theta)
+                b = np.sin(theta)
+                x0 = a * rho
+                y0 = b * rho
+                x1 = int(x0 + 1000 * (-b))
+                y1 = int(y0 + 1000 * (a))
+                x2 = int(x0 - 1000 * (-b))
+                y2 = int(y0 - 1000 * (a))
+                cv2.line(cleaned_image, (x1, y1), (x2, y2), (255, 255, 255), 6)
 
-            # Analyze the structure of the cropped table to identify rows and columns
-            table_structure_analysis = self._analyze_structure(single_table_crop)
+        return cleaned_image
 
-            # Get the cell coordinates based on the analyzed table structure
-            cell_coordinates = self._get_cell_coordinates(table_structure_analysis, xmin, ymin)
 
-            # Append the cell coordinates of this table to the master list
-            all_tables_cell_coordinates.append(cell_coordinates)
+    def _separate_rows(self, cell_coordinates):
+        # Sort boxes by ymin to separate rows
+        cell_coordinates = sorted(cell_coordinates, key=lambda x: x['ymin'])
 
-        # Return the master list of all cell coordinates from all tables
-        return all_tables_cell_coordinates, detected_tables
+        # Calculate the average height of all boxes
+        avg_height = np.mean([box['ymax'] - box['ymin'] for box in cell_coordinates])
 
-    def get_text_from_page(self, page, box):
-        xmin, ymin, xmax, ymax = box['xmin'], box['ymin'], box['xmax'], box['ymax']
-        # Define the rectangle for cropping (x0, y0, x1, y1)
-        crop_rect = fitz.Rect(xmin, ymin, xmax, ymax)
+        # Use a percentage (e.g., 10%) of the average height as the threshold for a new row
+        threshold = self._threshold_percentage * avg_height
 
-        # Extract text from the cropped area
-        text = page.get_text("text", clip=crop_rect).strip().replace('\n', '')
+        # Identify unique rows by their y-coordinates
+        rows = []
+        last_ymin = None
+        for box in cell_coordinates:
+            ymin = box['ymin']
+            if last_ymin is None or abs(ymin - last_ymin) > threshold:  # Adjust the threshold as needed
+                rows.append([])
+            rows[-1].append(box)
+            last_ymin = ymin
 
-        return text
+        # Sort each row by xmin to arrange columns
+        for row in rows:
+            row.sort(key=lambda x: x['xmin'])
+
+        return rows
 
     def get_text_from_image(self, image_cv, box):
         xmin, ymin, xmax, ymax = box['xmin'], box['ymin'], box['xmax'], box['ymax']
+
         # Extract each cell image
         # cell_image = image_cv[ymin:ymax, xmin:xmax]
         cell_image = image_cv[floor(ymin):ceil(ymax), floor(xmin):ceil(xmax)]
 
-        # Convert to PIL Image
-        cell_image_pil = Image.fromarray(cv2.cvtColor(cell_image, cv2.COLOR_BGR2RGB))
+        text = ''
+        for pad in [3,8,13,20]: # don't ask me why, but some numbers can only be read with a SPECIFIC padding #FIXME #despair
+            # Pad image with white to improve OCR
+            cell_image_padded = self._pad_image_with_white(cell_image, pad)
+            
+            # Clean the table lines to improve OCR performance
+            cell_image_padded = self._remove_table_lines(cell_image_padded)
 
-        # Perform OCR to get text
-        text = pytesseract.image_to_string(cell_image_pil).strip().replace('\n', '')
+            # Convert to PIL Image
+            cell_image_padded_pil = Image.fromarray(cv2.cvtColor(cell_image_padded, cv2.COLOR_BGR2RGB))
+
+            # Perform OCR to get text
+            text = pytesseract.image_to_string(cell_image_padded_pil).strip().replace('\n', '')
+
+            if text != '':
+                break
 
         return text
 
-    def tables_from_page(self, filepath, page, is_image=False):
-        pix = page.get_pixmap()
+    def extract(self, page_image: Image, table_element: TableElement) -> TableElement:
+        """
+        Extracts an table from a given page image based on the coordinates in the table element.
 
-        if is_image:
-            # high resolution image
-            image = pdf2image.convert_from_path(filepath, dpi=DPI)[0]
-        else:
-            # image from pages
-            image = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
+        Args:
+            page_image (PIL.Image): The page image from which to extract the table.
+            table_element (TableElement): The table element containing the coordinates for extraction.
 
-        all_tables_cell_coordinates, detected_tables = self._extract_cell_coordinates_from_image(image)
+        Returns:
+            TableElement: The updated table element with the extracted LaTeX content.
 
-        dataframes = []
+        Raises:
+            TypeError: If the types of the arguments are not as expected.
+        """
+        # Verify the input variable types
+        if not isinstance(page_image, Image.Image):
+            raise TypeError("page_image must be a PIL.Image object")
+        if not isinstance(table_element, TableElement):
+            raise TypeError("table_element must be an TableElement object") #TODO
 
-        for boxes in all_tables_cell_coordinates:
-            # Sort boxes by ymin to separate rows
-            boxes = sorted(boxes, key=lambda x: x['ymin'])
+        # Gather the individual cells from the table
+        cell_coordinates = self._get_cell_coordinates(page_image, table_element)
 
-            # Calculate the average height of all boxes
-            avg_height = np.mean([box['ymax'] - box['ymin'] for box in boxes])
+        rows = self._separate_rows(cell_coordinates)
 
-            # Use a percentage (e.g., 10%) of the average height as the threshold for a new row
-            threshold = self._threshold_percentage * avg_height
+        dataframe = self._get_dataframe(rows, page_image)
 
-            # Identify unique rows by their y-coordinates
-            rows = []
-            last_ymin = None
-            for box in boxes:
-                ymin = box['ymin']
-                if last_ymin is None or abs(ymin - last_ymin) > threshold:  # Adjust the threshold as needed
-                    rows.append([])
-                rows[-1].append(box)
-                last_ymin = ymin
+        # Update the table element with the extracted LaTeX content
+        table_element._table_data = dataframe
 
-            # Sort each row by xmin to arrange columns
-            for row in rows:
-                row.sort(key=lambda x: x['xmin'])
+        return table_element
 
-            # Initialize an empty DataFrame
-            df = pd.DataFrame()
+    def __str__(self) -> str:
+        """
+        Returns a string representation of the TableDataExtractor object.
 
-            # Populate the DataFrame
-            for row_idx, row_boxes in enumerate(rows):
-                row_data = []
-                for col_idx, box in enumerate(row_boxes):
-                    # this converts from image to fitz coordinate system
-                    # box = {k: v * IMAGE_TO_FITZ_CONSTANT for k, v in box.items()}
-                    if is_image:
-                        image_cv = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
-                        text = self.get_text_from_image(image_cv, box)
-                    else:
-                        text = self.get_text_from_page(page, box)
-                    row_data.append(text)
-
-                # If it's the first row, set the DataFrame columns
-                if row_idx == 0:
-                    df = pd.DataFrame(columns=row_data)
-                else:
-                    df.loc[row_idx - 1] = row_data
-
-            dataframes.append(df)
-        return dataframes, image, detected_tables
-
-    def extract(self, pdf_path, document, pipeline_step):
-        pdf_file = fitz.open(pdf_path)
-        for page_number, page in enumerate(pdf_file):
-            dfs, image, detected_tables = self.tables_from_page(pdf_path, page, is_image=False)
-            document.save_tables(image, detected_tables)
-
-            for df, box in zip(dfs, detected_tables):
-                x_min, y_min, x_max, y_max = self.convert_pdf_to_image_reference(box['box']).values()
-                table = TableElement(x_min, y_min, x_max, y_max, pipeline_step, df)
-                document.add_element(page_number, table)
-
-    def convert_pdf_to_image_reference(self, box):
-        return {k: v / IMAGE_TO_FITZ_CONSTANT for k, v in box.items()}
+        Returns:
+            str: A string representation of the object.
+        """
+        return f"TableDataExtractor(latex_ocr={self.latex_ocr})"
