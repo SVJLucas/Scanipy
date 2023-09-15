@@ -19,9 +19,9 @@ class Element:
             ValueError: If x_min >= x_max or y_min >= y_max.
             TypeError: If the types of the arguments do not match the expected types.
         """
-        # Verify the input variable types
-        if not isinstance(x_min, int) or not isinstance(y_min, int) or not isinstance(x_max, int) or not isinstance(y_max, int):
-            raise TypeError("Coordinates must be integers")
+        # Verify the input variable types #TODO
+        # if not all(isinstance(var, int) for var in [x_min, y_min, x_max, y_max]):
+        #     raise TypeError("Coordinates must be integers")
         if pipeline_step is not None and not isinstance(pipeline_step, int):
             raise TypeError("pipeline_step must be an integer or None")
 

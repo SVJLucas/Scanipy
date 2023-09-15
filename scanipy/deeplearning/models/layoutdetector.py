@@ -1,7 +1,7 @@
 import PIL
 from typing import Union, List
 from layoutparser.models import Detectron2LayoutModel
-from .elements import TextElement,TitleElement,ImageElement,TableElement
+from scanipy.elements import TextElement,TitleElement,ImageElement,TableElement
 
 
 class LayoutDetector:
@@ -57,7 +57,7 @@ class LayoutDetector:
         layout = self.model.detect(image).to_dataframe()
         
         # Initialize an empty list to store detected elements
-        empty_elements = []
+        elements = []
         
         # Iterate through each block in the DataFrame
         for _, block in layout.iterrows():
@@ -79,6 +79,6 @@ class LayoutDetector:
             elements.append(element)
         
         # Return the list of detected elements
-        return empty_elements
+        return elements
 
 

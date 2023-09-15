@@ -27,8 +27,6 @@ class TitleElement(Element):
             TypeError: If the types of the arguments are not as expected.
         """
         # Verify the input variable types
-        if not all(isinstance(var, int) for var in [x_min, y_min, x_max, y_max]):
-            raise TypeError("Coordinates must be integers")
         if pipeline_step is not None and not isinstance(pipeline_step, int):
             raise TypeError("pipeline_step must be an integer or None")
 

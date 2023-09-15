@@ -2,8 +2,8 @@ import random
 import string
 from typing import Union
 from PIL import Image
-from .extractors import Extractor
-from .elements import ImageElement
+from .extractor import Extractor
+from scanipy.elements import ImageElement
 
 # Define the ImageExtractor class
 class ImageExtractor(Extractor):

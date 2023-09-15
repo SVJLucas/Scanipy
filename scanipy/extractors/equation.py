@@ -1,8 +1,8 @@
 from typing import Union
 from PIL import Image
-from deeplearning.models import EquationImageToLatex
-from .extractors import Extractor
-from .elements import EquationElement
+from scanipy.deeplearning.models import EquationToLatex
+from .extractor import Extractor
+from scanipy.elements import EquationElement
 
 # Define the EquationExtractor class
 class EquationExtractor(Extractor):
@@ -18,7 +18,7 @@ class EquationExtractor(Extractor):
         Initialize an EquationExtractor object.
         """
         # Initialize the OCR model for converting equation images to LaTeX
-        self.latex_ocr = EquationImageToLatex()
+        self.latex_ocr = EquationToLatex()
 
     def extract(self, page_image: Image, equation_element: EquationElement) -> EquationElement:
         """

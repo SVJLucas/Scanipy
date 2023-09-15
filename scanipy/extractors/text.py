@@ -1,9 +1,9 @@
 from typing import Union
 from PIL import Image
 from pdfplumber.page import Page
-from .extractors import Extractor
-from .elements import TextElement 
-from deeplearning.models import TextOCR 
+from .extractor import Extractor
+from scanipy.elements import TextElement 
+#from deeplearning.models import TextOCR  #TODO
 
 # Define the TextExtractor class
 class TextExtractor(Extractor):
@@ -11,7 +11,7 @@ class TextExtractor(Extractor):
     Represents a text extractor for extracting text from a document.
     """
 
-    def __init__(self, use_ocr: bool, lang: str = 'eng):
+    def __init__(self, use_ocr: bool, lang: str = 'eng'):
         """
         Initialize a TextExtractor object.
 
@@ -28,7 +28,7 @@ class TextExtractor(Extractor):
 
         # Initialize OCR settings and OCR model
         self.use_ocr = use_ocr
-        self.text_ocr = TextOCR(lang)
+        # self.text_ocr = TextOCR(lang) #TODO
 
     def process_text_image(self, text_element: TextElement, text_image: Image, pdf_page: Page) -> str:
         """
