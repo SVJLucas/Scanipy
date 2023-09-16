@@ -96,7 +96,7 @@ class EquationElement(Element):
         """
         return f"EquationElement(x_min={self.x_min}, y_min={self.y_min}, x_max={self.x_max}, y_max={self.y_max}, pipeline_step={self.pipeline_step}, latex_content={self.latex_content}, is_inside_text={self.is_inside_text})"
 
-    def __str__(self):
+    def __str__(self)->str:
         """
         Returns a string representation of the object, which is the same as its official representation.
         
