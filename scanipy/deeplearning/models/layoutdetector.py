@@ -33,6 +33,23 @@ class LayoutDetector:
             label_map={0: "Text", 1: "Title", 2: "List", 3: "Table", 4: "Figure"},
             device=device
         )
+    def __repr__(self):
+        """
+        Returns the official string representation of the EquationToLatex object.
+        
+        Returns:
+            str: A string that can be used to recreate the EquationToLatex object.
+        """
+        return "LayoutDetector()"
+
+    def __str__(self):
+        """
+        Returns a string representation of the EquationToLatex object, which is the same as its official representation.
+        
+        Returns:
+            str: A string that can be used to recreate the EquationToLatex object.
+        """
+        return self.__repr__()
 
     def __call__(self, image: PIL.Image, pipeline_step: Union[int, None] = None) -> List[Union[TextElement, TitleElement, ImageElement, TableElement]]:
         """
@@ -89,5 +106,6 @@ class LayoutDetector:
         
         # Return the list of detected elements
         return elements
+
 
 
