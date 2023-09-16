@@ -1,9 +1,10 @@
 import fitz
+import logging
 
 from .pdfhandler import PDFDocument
 from .deeplearning.models import LayoutDetector, EquationFinder
-from .elements import TextElement, TableElement, EquationElement, TitleElement, ImageElement
-from .extractors import TextExtractor, TableDataExtractor, EquationExtractor, ImageExtractor
+from .elements import TitleElement, TextElement, TableElement, EquationElement, TitleElement, ImageElement
+from .extractors import TitleExtractor, TextExtractor, TableDataExtractor, EquationExtractor, ImageExtractor
 from .document import Document
 from collections import defaultdict
 import os
@@ -26,6 +27,7 @@ class Parser:
         self.layout_detector = LayoutDetector(device='cuda')
         self.table_extractor = TableDataExtractor()
         self.text_extractor = TextExtractor(use_ocr=False)
+        self.title_extractor = TitleExtractor(use_ocr=False)
         self.image_extractor = ImageExtractor()
         self.equation_finder = EquationFinder(device='gpu')
         self.equation_extractor = EquationExtractor()
@@ -39,6 +41,8 @@ class Parser:
         for page in pdfdoc:
             elements = self.layout_detector(page.get_image())
             equations = self.equation_finder(page.get_image())
+
+            logging.info(f'Detected {len(elements)} elements and {len(equations)} equations')
 
             for equation in equations:
                 if equation.is_inside_text:
@@ -55,7 +59,7 @@ class Parser:
                     case 'TableElement':
                         element = self.table_extractor(element)
                     case 'TitleElement':
-                        element = self.text_extractor(element)
+                        element = self.title_extractor(element)
                     case 'ImageElement':
                         element = self.image_extractor(element)
                 element.num_page = page.page_number
