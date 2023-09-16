@@ -97,6 +97,14 @@ class TitleElement(Element):
         """
         return f"TitleElement(x_min={self.x_min}, y_min={self.y_min}, x_max={self.x_max}, y_max={self.y_max}, pipeline_step={self.pipeline_step}, title_content={self.title_content}, has_equation_inside={self.has_equation_inside})"
 
+    def __str__(self)-> str:
+        """
+        Returns a string representation of the object, which is the same as its official representation.
+        
+        Returns:
+            str: A string that can be used to recreate the object.
+        """
+        return self.__repr__()
     def generate_markdown(self, output_directory: str) -> str:
         """
         Generate the Markdown representation of the title element.
