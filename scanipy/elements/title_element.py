@@ -1,22 +1,23 @@
-import logging
 from typing import Union
+import logging
 from .element import Element
-from .equation import EquationElement
-# Define the TextElement class, which inherits from the Element class
-class TextElement(Element):
+from .equation_element import EquationElement
+
+
+# Define the TitleElement class
+class TitleElement(Element):
     """
-    Represents a text element within a document.
+    Represents a title element within a document.
 
     Attributes:
-        text_content (str): The content of the text element.
-        has_equation_inside (bool): If there's some equation inside the text.
-        
+        title_content (str): The content of the title element.
+        has_equation_inside (bool): If there's some equation inside the title.
     """
 
-    def __init__(self, x_min: float, y_min: float, x_max: float, y_max: float,
+    def __init__(self, x_min: float, y_min: float, x_max: float, y_max: float, 
                  pipeline_step: Union[int, None] = None, page_number: Union[int, None] = None):
         """
-        Initialize a TextElement object.
+        Initialize a TitleElement object.
 
         Args:
             x_min (float): The minimum x-coordinate of the element, normalized to the image width (range: 0 to 1).
@@ -33,8 +34,8 @@ class TextElement(Element):
         # Initialize instance variables by calling the parent class constructor
         super().__init__(x_min, y_min, x_max, y_max, pipeline_step, page_number)
 
-        # Initialize additional instance variable specific to TextElement
-        self._text_content = None
+        # Initialize additional instance variable specific to TitleElement
+        self._title_content = None
         self._has_equation_inside = False
         self._equation_inside = None
         
@@ -89,42 +90,42 @@ class TextElement(Element):
             raise TypeError("has_equation_inside must be a bool")
         self._has_equation_inside = value
         
-    # Setter and Getter for text_content
+    # Setter and Getter for title_content
     @property
-    def text_content(self) -> Union[str, None]:
+    def title_content(self) -> Union[str, None]:
         """
-        Gets the content of the text element.
+        Gets the content of the title element.
 
         Returns:
-            Union[str, None]: The content of the text element.
+            Union[str, None]: The content of the title element.
         """
-        return self._text_content
+        return self._title_content
 
-    @text_content.setter
-    def text_content(self, value: Union[str, None]):
+    @title_content.setter
+    def title_content(self, value: Union[str, None]):
         """
-        Sets the content of the text element.
+        Sets the content of the title element.
 
         Args:
-            value (Union[str, None]): The new content for the text element.
+            value (Union[str, None]): The new content for the title element.
 
         Raises:
             TypeError: If the provided value is not a string or None.
         """
         if value is not None and not isinstance(value, str):
-            raise TypeError("text_content must be a string or None")
-        self._text_content = value
+            raise TypeError("title_content must be a string or None")
+        self._title_content = value
 
-    def __repr__(self) -> str:
+    def __str__(self) -> str:
         """
-        Returns a string representation of the TextElement object.
+        Returns a string representation of the TitleElement object.
 
         Returns:
             str: A string representation of the object.
         """
-        return f"TextElement(x_min={self.x_min}, y_min={self.y_min}, x_max={self.x_max}, y_max={self.y_max}, pipeline_step={self.pipeline_step}, text_content={self.text_content}, has_equation_inside={self.has_equation_inside})"
+        return f"TitleElement(x_min={self.x_min}, y_min={self.y_min}, x_max={self.x_max}, y_max={self.y_max}, pipeline_step={self.pipeline_step}, title_content={self.title_content}, has_equation_inside={self.has_equation_inside})"
 
-    def __str__(self)->str:
+    def __str__(self)-> str:
         """
         Returns a string representation of the object, which is the same as its official representation.
         
@@ -132,21 +133,21 @@ class TextElement(Element):
             str: A string that can be used to recreate the object.
         """
         return self.__repr__()
-
+    
     def generate_markdown(self, output_directory: str) -> str:
         """
-        Generate the Markdown representation of the text element.
+        Generate the Markdown representation of the title element.
 
         Args:
             output_directory (str): The directory where the text file will be saved.
 
         Returns:
-            str: Markdown representation of the text element.
+            str: Markdown representation of the title element.
         """
-        if self.text_content == None:
+        if self.title_content == None:
             logging.warning('Tried to write a NoneType object')
             return '\n\n'
 
-        # Concatenate the text content with newlines for Markdown formatting
-        formatted_text = self.text_content + '\n\n'
-        return formatted_text
+        # Add Markdown header formatting to the title content
+        formatted_title = '## ' + self.title_content + '\n\n'
+        return formatted_title

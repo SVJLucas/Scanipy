@@ -2,7 +2,7 @@ import logging
 from typing import Union
 import pandas as pd
 from .element import Element
-from .equation import EquationElement
+from .equation_element import EquationElement
 
 # Define the TableElement class
 class TableElement(Element):

@@ -1,7 +1,7 @@
 import os
 import logging
 from .element import Element
-from .equation import EquationElement
+from .equation_element import EquationElement
 from typing import Union, Any
 import matplotlib.pyplot as plt
 
