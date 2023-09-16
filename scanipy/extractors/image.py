@@ -2,9 +2,10 @@ import random
 import string
 from typing import Union
 from PIL import Image
-from fitz import Page
+from pdfplumber.page import Page
 from .extractor import Extractor
 from scanipy.elements import ImageElement
+from scanipy.pdfhandler import PDFPage
 
 # Define the ImageExtractor class
 class ImageExtractor(Extractor):
@@ -44,7 +45,7 @@ class ImageExtractor(Extractor):
 
         return random_string
 
-    def extract(self, pdf_page: Page, page_image: Image.Image, image_element: ImageElement, unique_key: Union[str, None] = None, image_extension: str = 'png' ) -> ImageElement:
+    def extract(self, page: PDFPage, image_element: ImageElement, unique_key: Union[str, None] = None, image_extension: str = 'png' ) -> ImageElement:
         """
         Extracts an image from a given page image based on the coordinates in the image element.
 
@@ -60,6 +61,9 @@ class ImageExtractor(Extractor):
         Raises:
             TypeError: If the unique_key is not unique.
         """
+        # Separate PIL and pdfplumber elements from the page
+        pdf_page = page.get_pdf()
+        page_image = page.get_image()
 
         # Verify the input variable types
         if not isinstance(page_image, Image.Image):

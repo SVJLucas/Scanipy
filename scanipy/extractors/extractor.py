@@ -1,3 +1,5 @@
+from scanipy.pdfhandler import PDFPage
+
 class Extractor:
-    def extract(self, pdf_page, page_image):
+    def extract(self, page: PDFPage):
         raise NotImplementedError

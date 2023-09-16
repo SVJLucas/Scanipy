@@ -3,6 +3,7 @@ from PIL import Image
 from fitz import Page
 from scanipy.deeplearning.models import TableStructureAnalyzer
 from scanipy.elements import TableElement
+from scanipy.pdfhandler import PDFPage
 from .extractor import Extractor
 
 from math import ceil, floor
@@ -207,7 +208,7 @@ class TableDataExtractor(Extractor):
 
         return text
 
-    def extract(self, pdf_page: Page, page_image: Image.Image, table_element: TableElement) -> TableElement:
+    def extract(self, page: PDFPage, table_element: TableElement) -> TableElement:
         """
         Extracts an table from a given page image based on the coordinates in the table element.
 
@@ -221,6 +222,10 @@ class TableDataExtractor(Extractor):
         Raises:
             TypeError: If the types of the arguments are not as expected.
         """
+        # Separate PIL and pdfplumber elements from the page
+        pdf_page = page.get_pdf()
+        page_image = page.get_image()
+
         # Verify the input variable types
         if not isinstance(page_image, Image.Image):
             raise TypeError("page_image must be a PIL.Image object")

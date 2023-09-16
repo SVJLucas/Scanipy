@@ -1,6 +1,6 @@
 from typing import Union
 from .element import Element
-
+from .equation import EquationElement
 # Define the TitleElement class
 class TitleElement(Element):
     """
@@ -34,7 +34,32 @@ class TitleElement(Element):
         # Initialize additional instance variable specific to TitleElement
         self._title_content = None
         self._has_equation_inside = False
+        self._equation_inside = None
+        
+    @property
+    def equation_inside(self) -> Union[EquationElement,None]:
+        """
+        Get the equation inside the element, if any.
+    
+        Returns:
+            EquationElement if the element contains equations, otherwise None.
+        """
+        return self._equation_inside
 
+    @equation_inside.setter
+    def equation_inside(self, value: EquationElement):
+        """
+        Sets the equation inside the element.
+
+        Args:
+            value (EquationElement): The new EquationElement value.
+
+        Raises:
+            TypeError: If the provided value is not a EquationElement.
+        """
+        if not isinstance(value, EquationElement):
+            raise TypeError("equation_inside must be a EquationElement")
+        self._equation_inside = value
     @property
     def has_equation_inside(self) -> bool:
         """

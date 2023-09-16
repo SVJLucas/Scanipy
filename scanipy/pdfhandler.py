@@ -1,16 +1,13 @@
 from PIL import Image, ImageDraw
-from pdfplumber.page import Page
-import pdf2image
-from typing import Tuple
-
-
-from typing import Iterator, List
+import pdfplumber
+import pdfplumber.page
+from typing import Tuple, Iterator, List
 
 
 class PDFPage:
-    def __init__(self, image: Image.Image, pdf_page: Page, page_number: int) -> None:
+    def __init__(self, image: Image.Image, pdf_page: pdfplumber.page.Page, page_number: int) -> None:
         self.image: Image.Image = image
-        self.pdf_page: Page = pdf_page
+        self.pdf_page: pdfplumber.page.Page = pdf_page
         self.page_number: int = page_number
 
     def get_image(self) -> Image.Image:
@@ -21,11 +18,11 @@ class PDFPage:
         """
         return self.image
 
-    def get_fitz(self) -> Page:
-        """Get the PyMuPDF Page object representing a page of the PDF.
+    def get_pdf(self) -> pdfplumber.page.Page:
+        """Get the pdfplumber Page object representing a page of the PDF.
 
         Returns:
-            fitz.Page: A PyMuPDF Page object.
+            pdfplumber.page.Page: A pdfplumber Page object.
         """
         return self.pdf_page
     
@@ -65,6 +62,7 @@ class PDFPage:
 
         return modified_image
 
+
 class PDFDocument:
     """Represents a PDF document.
 
@@ -72,26 +70,23 @@ class PDFDocument:
         filepath (str): The path to the PDF file.
 
     Attributes:
-        pdf_file (fitz.Document): A PyMuPDF Document object representing the PDF file.
+        pdf_file (pdfplumber.pdf.PDF): A pdfplumber PDF object representing the PDF file.
         pages (List[PDFPage]): A list of PDFPage objects representing pages in the PDF.
     """
     def __init__(self, filepath: str):
-        self.pdf_file: fitz.Document = fitz.open(filepath)
-        self.pages: List[PDFPage] = self._initialize_pages(filepath)
+        self.pdf_file = pdfplumber.open(filepath)
+        self.pages = self._initialize_pages()
 
-    def _initialize_pages(self, filepath: str) -> List[PDFPage]:
+    def _initialize_pages(self) -> List[PDFPage]:
         """Initialize and return a list of PDFPage objects for each page in the PDF.
 
         Returns:
             List[PDFPage]: A list of PDFPage objects.
         """
-        images = pdf2image.convert_from_path(filepath)
         pages = []
-        for page_number, pdf_page in enumerate(self.pdf_file):
-            width = pdf_page.rect.width
-            height = pdf_page.rect.height
-            image = images[page_number]
-            pages.append(PDFPage(image, pdf_page, page_number))
+        for page_number, pdf_page in enumerate(self.pdf_file.pages):
+            image = pdf_page.to_image(resolution=200).original.copy()
+            pages.append(PDFPage(image, pdf_page, page_number + 1))
         return pages
 
     def __iter__(self) -> Iterator[PDFPage]:

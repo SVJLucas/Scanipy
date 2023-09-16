@@ -1,8 +1,11 @@
 import fitz
-from .deeplearning.models import LayoutDetector
+
+from .pdfhandler import PDFDocument
+from .deeplearning.models import LayoutDetector, EquationFinder
 from .elements import TextElement, TableElement, EquationElement, TitleElement, ImageElement
 from .extractors import TextExtractor, TableDataExtractor, EquationExtractor, ImageExtractor
-from .document import PDFDocument, Document
+from .document import Document
+from collections import defaultdict
 import os
 
 
@@ -14,7 +17,7 @@ class Parser:
         pdf_file (PyMuPDF.Document): The PyMuPDF Document object representing the PDF file.
     """
 
-    def __init__(self):
+    def __init__(self): #TODO define device here
         """
         Initialize a new Parser instance.
 
@@ -24,23 +27,44 @@ class Parser:
         self.table_extractor = TableDataExtractor()
         self.text_extractor = TextExtractor(use_ocr=False)
         self.image_extractor = ImageExtractor()
+        self.equation_finder = EquationFinder(device='gpu')
         self.equation_extractor = EquationExtractor()
-        self.extractor_map = {TextElement: self.text_extractor,
-                              TableElement: self.table_extractor,
-                              EquationElement: self.equation_extractor,
-                              TitleElement: self.text_extractor,
-                              ImageElement: self.image_extractor}
         # self.pipeline = [self.text_extractor, self.table_extractor, self.equation_extractor]
-
-    def extract(self, path):
+    
+    def extract(self, path): #TODO add min and max pagges
         pdfdoc = PDFDocument(path)
+        elements_h = {}
         document = Document()
 
         for page in pdfdoc:
             elements = self.layout_detector(page.get_image())
-            for element in elements:
-                self.extractor_map[type(element)].extract(page.get_fitz(), page.get_image(), element)
-                document.add_element(page.page_number, element)
+            equations = self.equation_finder(page.get_image())
 
-        return document
+            for equation in equations:
+                if equation.is_inside_text:
+                    for element in elements:
+                        if equation.is_in(element):
+                            element.has_equation_inside = True
+                            element.equation_inside = equation
+                            break #TODO: what if two elements have the same equation? #BUG
+            
+            for element in elements:
+                match str(type(element)):
+                    case 'TextElement':
+                        element = self.text_extractor(element)
+                    case 'TableElement':
+                        element = self.table_extractor(element)
+                    case 'TitleElement':
+                        element = self.text_extractor(element)
+                    case 'ImageElement':
+                        element = self.image_extractor(element)
+                element.num_page = page.page_number
+                document.add_element(page.page_number, element)
+            for equation in equations:
+                equation = self.equation_extractor.extract(page, equation)
+                equation.num_page = page.page_number
+                document.add_element(page.page_number, equation)
+            elements_h[page.page_number] = [*elements,*equations]
+
+        return document #elements_h
         

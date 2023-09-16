@@ -12,7 +12,8 @@ class EquationElement(Element):
     """
 
     def __init__(self, x_min: float, y_min: float, x_max: float, y_max: float, 
-                 pipeline_step: Union[int, None] = None, page_number: Union[int, None] = None):
+                 pipeline_step: Union[int, None] = None, page_number: Union[int, None] = None,
+                 is_inside_text: bool = False):
         """
         Initialize an EquationElement object.
 
@@ -33,7 +34,7 @@ class EquationElement(Element):
 
         # Initialize additional instance variables specific to EquationElement
         self._latex_content = None
-        self._is_inside_text = False
+        self._is_inside_text = is_inside_text
 
     # Setter and Getter for latex_content
     @property

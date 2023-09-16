@@ -31,8 +31,8 @@ class TextOCR:
                 self.lang = 'en'
             self.model = pytesseract.image_to_string
         else:
-             self.lang = lang
-             if self.lang != 'en':
+            self.lang = lang
+            if self.lang != 'en':
                 self.model = easyocr.Reader([self.lang, 'en'])
             else:
                 self.model = easyocr.Reader(['en'])
