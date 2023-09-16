@@ -1,13 +1,3 @@
-'''
-This file contains the implementation of ImageToLatex class
-
-Created by:
-    Lucas José (lucas.jose.veloso.de.souza@gmail.com)
-    Date: September 11, 2023
-'''
-
-
-
 import pickle
 from pix2tex.cli import LatexOCR
 
@@ -49,3 +39,20 @@ class EquationToLatex:
         """
         # Use the loaded model to convert the image into LaTeX code
         return self.model(image)
+    def __repr__(self):
+        """
+        Returns the official string representation of the EquationToLatex object.
+        
+        Returns:
+            str: A string that can be used to recreate the EquationToLatex object.
+        """
+        return "EquationToLatex()"
+
+    def __str__(self):
+        """
+        Returns a string representation of the EquationToLatex object, which is the same as its official representation.
+        
+        Returns:
+            str: A string that can be used to recreate the EquationToLatex object.
+        """
+        return self.__repr__()
