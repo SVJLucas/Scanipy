@@ -12,7 +12,7 @@ class EquationElement(Element):
     """
 
     def __init__(self, x_min: float, y_min: float, x_max: float, y_max: float, 
-                 pipeline_step: Union[int, None] = None):
+                 pipeline_step: Union[int, None] = None, page_number: Union[int, None] = None):
         """
         Initialize an EquationElement object.
 
@@ -22,6 +22,7 @@ class EquationElement(Element):
             x_max (float): The maximum x-coordinate of the element, normalized to the image width (range: 0 to 1).
             y_max (float): The maximum y-coordinate of the element, normalized to the image height (range: 0 to 1).
             pipeline_step (Union[int, None], optional): The pipeline step, can be None.
+            page_number (int): Specifies the page number on which the element is located.
 
         Raises:
             TypeError: If the types of the arguments are not as expected.
@@ -31,7 +32,7 @@ class EquationElement(Element):
             raise TypeError("pipeline_step must be an integer or None")
 
         # Initialize instance variables by calling the parent class constructor
-        super().__init__(x_min, y_min, x_max, y_max, pipeline_step)
+        super().__init__(x_min, y_min, x_max, y_max, pipeline_step, page_number)
 
         # Initialize additional instance variables specific to EquationElement
         self._latex_content = None
