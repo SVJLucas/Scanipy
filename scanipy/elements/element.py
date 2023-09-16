@@ -3,7 +3,7 @@ from typing import Union
 # Define the Element class
 class Element:
     def __init__(self, x_min: float, y_min: float, x_max: float, y_max: float,
-                 pipeline_step:Union[int, None]=None, intersection_percentage_threshold = 90):
+                 pipeline_step:Union[int, None]=None, page_number: Union[int, None] = None, intersection_percentage_threshold = 90):
         """
         Initialize an Element object with normalized coordinates, an optional pipeline step, and an intersection percentage threshold.
 
@@ -13,6 +13,7 @@ class Element:
             x_max (float): The maximum x-coordinate of the element, normalized to the image width (range: 0 to 1).
             y_max (float): The maximum y-coordinate of the element, normalized to the image height (range: 0 to 1).
             pipeline_step (Union[int, None], optional): The processing step in the pipeline to which this element belongs. Defaults to None.
+            page_number (int): Specifies the page number on which the element is located.
             intersection_percentage_threshold (int, optional): The minimum percentage of intersection required for two elements to be considered overlapping. Defaults to 90 (%).
 
         Raises:
@@ -38,6 +39,10 @@ class Element:
         # Verify the pipeline_step type
         if pipeline_step is not None and not isinstance(pipeline_step, int):
             raise TypeError("pipeline_step must be an integer or None")
+            
+        # Verify the page_number type
+        if pipeline_step is not None and not isinstance(page_number, int):
+            raise TypeError("page_number must be an integer or None")
 
         # Initialize instance variables
         self._x_min = x_min
@@ -45,6 +50,7 @@ class Element:
         self._x_max = x_max
         self._y_max = y_max
         self._pipeline_step = pipeline_step
+        self._page_number = page_number
         self._intersection_percentage_threshold = intersection_percentage_threshold
 
         # Calculate the center coordinates and width
@@ -60,7 +66,7 @@ class Element:
         Returns:
             str: A string representation of the Element object.
         """
-        return f"Element(x_min={self._x_min}, y_min={self._y_min}, x_max={self._x_max}, y_max={self._y_max}, pipeline_step={self._pipeline_step}"
+        return f"Element(x_min={self._x_min}, y_min={self._y_min}, x_max={self._x_max}, y_max={self._y_max}, pipeline_step={self._pipeline_step}, page_number={self._page_number})"
 
     def __lt__(self, other)->bool:
         """
@@ -79,9 +85,9 @@ class Element:
         if not isinstance(other, Element):
             raise TypeError("other must be an instance or subclass of Element")
 
-        return self.column_before(other) or (self.same_column(other) and (self.y_min < other.y_min))
+        return self._column_before(other) or (self._same_column(other) and (self.y_min < other.y_min))
 
-    def column_before(self, other)->bool:
+    def _column_before(self, other)->bool:
         """
         Check if this Element is in a column before the other Element.
 
@@ -98,7 +104,7 @@ class Element:
         max_width = max(self.width, other.width)
         return self.x_min < other.x_min - max_width / 2
 
-    def same_column(self, other)->bool:
+    def _same_column(self, other)->bool:
         """
         Check if this Element is in the same column as the other Element.
 
@@ -127,9 +133,9 @@ class Element:
         """
         if not isinstance(other, Element):
             raise TypeError("other must be an instance or subclass of Element")
-        return self.intersection_percentage(other) > self._intersection_percentage_threshold
+        return self._intersection_percentage(other) > self._intersection_percentage_threshold
 
-    def intersection_area(self, other)->int:
+    def _intersection_area(self, other)->int:
         """
         Calculate the area of intersection between this Element and another.
 
@@ -166,7 +172,7 @@ class Element:
         if not isinstance(other, Element):
             raise TypeError("other must be an instance or subclass of Element")
 
-        intersection_area = self.intersection_area(other)
+        intersection_area = self._intersection_area(other)
         self_area = (self.x_max - self.x_min) * (self.y_max - self.y_min)
 
         return intersection_area / self_area * 100
@@ -306,3 +312,28 @@ class Element:
         if pipeline_step is not None and not isinstance(pipeline_step, int):
             raise TypeError("pipeline_step must be either an integer or None.")
         self._pipeline_step = pipeline_step
+
+    @property
+    def page_number(self) -> Union[int, None]:
+        """
+        Gets the page number associated with the element.
+
+        Returns:
+            Union[int, None]: The page number, which can be an integer or None.
+        """
+        return self._page_number
+
+    @page_number.setter
+    def page_number(self, pipeline_step: Union[int, None]):
+        """
+        Sets the page number associated with the element.
+
+        Args:
+            page_number (Union[int, None]): The new page number, which can be an integer or None.
+
+        Raises:
+            TypeError: If page_number is neither an integer nor None.
+        """
+        if pipeline_step is not None and not isinstance(pipeline_step, int):
+            raise TypeError("pipeline_step must be either an integer or None.")
+        self._page_number = page_number
