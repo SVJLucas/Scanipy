@@ -89,7 +89,7 @@ class TextElement(Element):
             raise TypeError("text_content must be a string or None")
         self._text_content = value
 
-    def __str__(self) -> str:
+    def __repr__(self) -> str:
         """
         Returns a string representation of the TextElement object.
 
@@ -97,6 +97,15 @@ class TextElement(Element):
             str: A string representation of the object.
         """
         return f"TextElement(x_min={self.x_min}, y_min={self.y_min}, x_max={self.x_max}, y_max={self.y_max}, pipeline_step={self.pipeline_step}, text_content={self.text_content}, has_equation_inside={self.has_equation_inside})"
+
+    def __str__(self)->str:
+        """
+        Returns a string representation of the object, which is the same as its official representation.
+        
+        Returns:
+            str: A string that can be used to recreate the object.
+        """
+        return self.__repr__()
 
     def generate_markdown(self, output_directory: str) -> str:
         """
