@@ -1,12 +1,3 @@
-'''
-This file contains the implementation of TableStructureAnalyzer class
-
-Created by:
-    Lucas José (lucas.jose.veloso.de.souza@gmail.com)
-    Date: September 11, 2023
-'''
-
-
 import pickle
 from transformers import pipeline
 
@@ -34,6 +25,24 @@ class TableStructureAnalyzer:
         """
         # Load the fine-tuned Table Transformer model from a pickle file
         self.model = pipeline("object-detection", model="microsoft/table-transformer-structure-recognition")
+
+    def __repr__(self):
+        """
+        Returns the official string representation of the EquationToLatex object.
+        
+        Returns:
+            str: A string that can be used to recreate the EquationToLatex object.
+        """
+        return "TableStructureAnalyzer()"
+
+    def __str__(self):
+        """
+        Returns a string representation of the EquationToLatex object, which is the same as its official representation.
+        
+        Returns:
+            str: A string that can be used to recreate the EquationToLatex object.
+        """
+        return self.__repr__()
 
     def __call__(self, image):
         """
