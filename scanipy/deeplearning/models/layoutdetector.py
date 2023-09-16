@@ -58,11 +58,20 @@ class LayoutDetector:
         
         # Initialize an empty list to store detected elements
         elements = []
+
+        # Getting image width and height 
+        width, height = image.size
         
         # Iterate through each block in the DataFrame
         for _, block in layout.iterrows():
             # Extract coordinates of the bounding box
             x_min, y_min, x_max, y_max = block.x_1, block.y_1, block.x_2, block.y_2
+
+            # Normalizing coordinates to be in range [0,1]
+            x_min = x_min/width
+            x_max = x_max/width
+            y_min = y_min/height
+            y_max = y_max/height
             
             # Use pattern matching to identify the type of the block and create the corresponding element
             match block.type:
