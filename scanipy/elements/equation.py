@@ -87,7 +87,7 @@ class EquationElement(Element):
             raise TypeError("is_inside_text must be a boolean")
         self._is_inside_text = value
 
-    def __str__(self) -> str:
+    def __repr__(self) -> str:
         """
         Returns a string representation of the EquationElement object.
 
@@ -95,6 +95,15 @@ class EquationElement(Element):
             str: A string representation of the object.
         """
         return f"EquationElement(x_min={self.x_min}, y_min={self.y_min}, x_max={self.x_max}, y_max={self.y_max}, pipeline_step={self.pipeline_step}, latex_content={self.latex_content}, is_inside_text={self.is_inside_text})"
+
+    def __str__(self):
+        """
+        Returns a string representation of the object, which is the same as its official representation.
+        
+        Returns:
+            str: A string that can be used to recreate the object.
+        """
+        return self.__repr__()
 
     def generate_markdown(self, output_directory: str) -> str:
         """
