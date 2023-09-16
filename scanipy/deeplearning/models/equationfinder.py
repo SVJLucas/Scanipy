@@ -54,6 +54,12 @@ class EquationFinder:
           x_min, y_min = equation['box'][:,0]
           x_max, y_max = equation['box'][:,3]
 
+          # Normalizing Coordinates
+          x_min /= image.size[0]
+          y_min /= image.size[1]
+          x_max /= image.size[0]
+          y_max /= image.size[1]
+
           # Verifying if the equation is in the middle of  text
           is_inside_text = bool(equation['type']=='embedding')
 
