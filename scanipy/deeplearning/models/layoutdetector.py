@@ -35,19 +35,19 @@ class LayoutDetector:
         )
     def __repr__(self):
         """
-        Returns the official string representation of the EquationToLatex object.
+        Returns the official string representation of the LayoutDetector object.
         
         Returns:
-            str: A string that can be used to recreate the EquationToLatex object.
+            str: A string that can be used to recreate the LayoutDetector object.
         """
         return "LayoutDetector()"
 
     def __str__(self):
         """
-        Returns a string representation of the EquationToLatex object, which is the same as its official representation.
+        Returns a string representation of the LayoutDetector object, which is the same as its official representation.
         
         Returns:
-            str: A string that can be used to recreate the EquationToLatex object.
+            str: A string that can be used to recreate the LayoutDetector object.
         """
         return self.__repr__()
 
