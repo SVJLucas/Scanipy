@@ -34,6 +34,29 @@ class EquationFinder:
         self.model = LayoutAnalyzer(model_name='mfd',
                                     device=device)
 
+    def __str__(self):
+        """
+        Returns the official string representation of the EquationFinder object.
+        
+        Returns:
+            str: A string that can be used to recreate the EquationFinder object.
+        """
+
+        # Create a string representation of the EquationFinder object
+        return self.__repr__()
+
+    def __repr__(self):
+        """
+        Returns the official string representation of the EquationFinder object.
+        
+        Returns:
+            str: A string that can be used to recreate the EquationFinder object.
+        """
+
+        # Create the official string representation of the EquationFinder object
+        return f"EquationFinder(device='{self.model.device}')"
+
+
     def __call__(self, image: PIL.Image, pipeline_step: Union[int, None] = None) -> List[EquationElement]:
         """
         Detects equation elements in the given image and returns them as a list.
@@ -74,3 +97,4 @@ class EquationFinder:
           empty_elements.append(element)
           
         return empty_elements
+        
