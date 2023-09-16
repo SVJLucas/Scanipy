@@ -1,5 +1,6 @@
 from typing import Union
 from PIL import Image
+from fitz import Page
 from scanipy.deeplearning.models import EquationToLatex
 from .extractor import Extractor
 from scanipy.elements import EquationElement
@@ -20,7 +21,7 @@ class EquationExtractor(Extractor):
         # Initialize the OCR model for converting equation images to LaTeX
         self.latex_ocr = EquationToLatex()
 
-    def extract(self, page_image: Image, equation_element: EquationElement) -> EquationElement:
+    def extract(self, pdf_page: Page, page_image: Image.Image, equation_element: EquationElement) -> EquationElement:
         """
         Extracts an equation from a given page image based on the coordinates in the equation element.
 
@@ -35,7 +36,7 @@ class EquationExtractor(Extractor):
             TypeError: If the types of the arguments are not as expected.
         """
         # Verify the input variable types
-        if not isinstance(page_image, Image):
+        if not isinstance(page_image, Image.Image):
             raise TypeError("page_image must be a PIL.Image object")
         if not isinstance(equation_element, EquationElement):
             raise TypeError("equation_element must be an EquationElement object")

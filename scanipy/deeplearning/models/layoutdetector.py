@@ -1,7 +1,9 @@
 import PIL
+from PIL import Image, ImageDraw
+import fitz
 from typing import Union, List
 from layoutparser.models import Detectron2LayoutModel
-from scanipy.elements import TextElement,TitleElement,ImageElement,TableElement
+from scanipy.elements import TextElement,TitleElement,ImageElement,TableElement,EquationElement
 
 
 class LayoutDetector:
@@ -15,7 +17,7 @@ class LayoutDetector:
         model: The Detectron2 model for layout detection.
     """
 
-    def __init__(self, device):
+    def __init__(self, device='cpu'):
         """
         Initializes the LayoutDetector class with a given device.
         
@@ -91,7 +93,10 @@ class LayoutDetector:
             y_max = y_max/height
             
             # Use pattern matching to identify the type of the block and create the corresponding element
+            element = None # Make sure that a new element is assigned
             match block.type:
+                case "List": #TODO
+                    element = TextElement(x_min, y_min, x_max, y_max, pipeline_step)
                 case "Text":
                     element = TextElement(x_min, y_min, x_max, y_max, pipeline_step)
                 case "Title":
@@ -100,12 +105,43 @@ class LayoutDetector:
                     element = ImageElement(x_min, y_min, x_max, y_max, pipeline_step)
                 case "Table":
                     element = TableElement(x_min, y_min, x_max, y_max, pipeline_step)
-            
             # Append the detected element to the list
             elements.append(element)
         
         # Return the list of detected elements
         return elements
 
+    # Debug Function
+    def _draw_rectangle(self, image: Image.Image, x1: float, y1: float, x2: float, y2: float, 
+                        outline_color: tuple = (255, 0, 0), thickness: int = 2) -> Image.Image:
+        """
+        Draw a rectangle on a PIL Image.
 
+        Args:
+            image (PIL.Image.Image): The input PIL Image.
+            x1 (float): The x-coordinate of the top-left corner.
+            y1 (float): The y-coordinate of the top-left corner.
+            x2 (float): The x-coordinate of the bottom-right corner.
+            y2 (float): The y-coordinate of the bottom-right corner.
+            outline_color (tuple): The outline color as an RGB tuple (default is red).
+            thickness (int): The outline thickness (default is 2).
 
+        Returns:
+            PIL.Image.Image: A new PIL Image with the rectangle drawn.
+        """
+        # Calculate PDF coordinates based on text element's normalized coordinates
+        x1 = int(x1 * image.width)
+        y1 = int(y1 * image.height)
+        x2 = int(x2 * image.width)
+        y2 = int(y2 * image.height)
+
+        # Create a copy of the input image to avoid modifying the original
+        image_copy = image.copy()
+        
+        # Create a drawing context on the copy of the image
+        draw = ImageDraw.Draw(image_copy)
+
+        # Draw the rectangle
+        draw.rectangle([x1, y1, x2, y2], outline=outline_color, width=thickness)
+
+        return image_copy

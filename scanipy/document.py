@@ -3,6 +3,11 @@ import layoutparser as lp
 import numpy as np
 from .elements import TableElement, TextElement, ImageElement
 import matplotlib.pyplot as plt
+import pdf2image
+import fitz
+from PIL import Image
+
+from typing import List, Iterator
 
 
 class Document:
@@ -28,12 +33,12 @@ class Document:
         if not os.path.exists(output_folder):
             os.makedirs(output_folder)
         output = ""
-        print(self.elements)
+        # print(self.elements)
         sorted_pages = sorted(list(self.elements.keys()))
         for page in sorted_pages:
             sorted_elements = self.get_ordered_elements(page)
             for element in sorted_elements:
-                element_output = element.print(output_folder)
+                element_output = element.generate_markdown(output_folder)
                 output += element_output
 
         output_path = os.path.join(output_folder, filename)
@@ -94,3 +99,81 @@ class Document:
 
     def save_tables(self, image, detected_tables):
         self.table_extractor_data.append({'image': image, 'detected_tables': detected_tables})
+
+
+
+class PDFPage:
+    def __init__(self, image: Image.Image, pdf_page: fitz.Page, page_number: int) -> None:
+        self.image: Image.Image = image
+        self.pdf_page: fitz.Page = pdf_page
+        self.page_number: int = page_number
+    
+    def get_image(self) -> Image.Image:
+        """Get an image of the page.
+
+        Returns:
+            PIL.Image.Image: A PIL.Image.Image object.
+        """
+        return self.image
+    
+    def get_fitz(self) -> fitz.Page:
+        """Get the PyMuPDF Page object representing a page of the PDF.
+
+        Returns:
+            fitz.Page: A PyMuPDF Page object.
+        """
+        return self.pdf_page
+
+class PDFDocument:
+    """Represents a PDF document.
+
+    Args:
+        filepath (str): The path to the PDF file.
+
+    Attributes:
+        pdf_file (fitz.Document): A PyMuPDF Document object representing the PDF file.
+        pages (List[PDFPage]): A list of PDFPage objects representing pages in the PDF.
+    """
+    def __init__(self, filepath: str):
+        self.pdf_file: fitz.Document = fitz.open(filepath)
+        self.pages: List[PDFPage] = self._initialize_pages(filepath)
+
+    def _initialize_pages(self, filepath: str) -> List[PDFPage]:
+        """Initialize and return a list of PDFPage objects for each page in the PDF.
+
+        Returns:
+            List[PDFPage]: A list of PDFPage objects.
+        """
+        images = pdf2image.convert_from_path(filepath)
+        pages = []
+        for page_number, pdf_page in enumerate(self.pdf_file):
+            width = pdf_page.rect.width
+            height = pdf_page.rect.height
+            image = images[page_number]
+            pages.append(PDFPage(image, pdf_page, page_number))
+        return pages
+
+    def __iter__(self) -> Iterator[PDFPage]:
+        """Iterator method to iterate over pages in the PDF.
+
+        Returns:
+            Iterator[PDFPage]: An iterator over PDFPage objects.
+        """
+        self.current_page_index = 0
+        return self
+
+    def __next__(self) -> PDFPage:
+        """Get the next page in the PDF.
+
+        Returns:
+            PDFPage: The next page in the PDF.
+        
+        Raises:
+            StopIteration: If there are no more pages to iterate.
+        """
+        if self.current_page_index < len(self.pages):
+            current_page = self.pages[self.current_page_index]
+            self.current_page_index += 1
+            return current_page
+        else:
+            raise StopIteration

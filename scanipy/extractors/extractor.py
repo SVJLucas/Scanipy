@@ -1,3 +1,3 @@
 class Extractor:
-    def extract(self, path, document, pipeline_step):
+    def extract(self, pdf_page, page_image):
         raise NotImplementedError
