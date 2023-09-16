@@ -169,7 +169,7 @@ class Element:
 
         return (x_max - x_min) * (y_max - y_min)
 
-    def intersection_percentage(self, other):
+    def _intersection_percentage(self, other):
         """
         Calculate the percentage of intersection between this Element and another.
 
@@ -334,7 +334,7 @@ class Element:
         return self._page_number
 
     @page_number.setter
-    def page_number(self, pipeline_step: Union[int, None]):
+    def page_number(self, page_number: Union[int, None]):
         """
         Sets the page number associated with the element.
 
@@ -344,6 +344,6 @@ class Element:
         Raises:
             TypeError: If page_number is neither an integer nor None.
         """
-        if pipeline_step is not None and not isinstance(pipeline_step, int):
+        if page_number is not None and not isinstance(page_number, int):
             raise TypeError("pipeline_step must be either an integer or None.")
         self._page_number = page_number
