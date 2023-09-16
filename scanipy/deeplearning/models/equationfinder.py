@@ -1,7 +1,7 @@
 import PIL
 from typing import Union, List
 from cnstd import LayoutAnalyzer
-from .elements import EquationElement
+from scanipy.elements import EquationElement
 
 class EquationFinder:
     """
@@ -77,24 +77,29 @@ class EquationFinder:
         
         for equation in equations:
           
-          # Getting position values
-          x_min, y_min = equation['box'][:,0]
-          x_max, y_max = equation['box'][:,3]
+            # Getting position values
+            x_min, y_min = equation['box'][0]
+            x_max, y_max = equation['box'][2]
 
-          # Normalizing coordinates to be in range [0,1]
-          x_min = x_min/width
-          x_max = x_max/width
-          y_min = y_min/height
-          y_max = y_max/height
+            # Verify if x_min is less than x_max and y_min is less than y_max
+            if x_min >= x_max or y_min >= y_max:
+                raise ValueError("Invalid coordinates: x_min should be less than x_max and y_min should be less than y_max")
 
-          # Verifying if the equation is in the middle of  text
-          is_inside_text = bool(equation['type']=='embedding')
 
-          # Creating element
-          element = EquationElement(x_min, y_min, x_max, y_max, pipeline_step, is_inside_text = is_inside_text)
+            # Normalizing coordinates to be in range [0,1]
+            x_min = x_min/width
+            x_max = x_max/width
+            y_min = y_min/height
+            y_max = y_max/height
 
-          # Adding EquationElement in the list
-          empty_elements.append(element)
+            # Verifying if the equation is in the middle of  text
+            is_inside_text = bool(equation['type']=='embedding')
+
+            # Creating element
+            element = EquationElement(x_min, y_min, x_max, y_max, pipeline_step, is_inside_text=is_inside_text)
+
+            # Adding EquationElement in the list
+            empty_elements.append(element)
           
         return empty_elements
         
