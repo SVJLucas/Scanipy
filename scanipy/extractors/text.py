@@ -4,6 +4,7 @@ from PIL import Image
 from pdfplumber.page import Page
 from .extractor import Extractor
 from scanipy.elements import TextElement 
+from scinpy.deeplearning import TextOCR
 from typing import Union, Tuple, List, Dict
 
 
