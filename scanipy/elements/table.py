@@ -89,7 +89,7 @@ class TableElement(Element):
             raise TypeError("table_data must be a pandas DataFrame or None")
         self._table_data = value
 
-    def __str__(self) -> str:
+    def __repr__(self) -> str:
         """
         Returns a string representation of the TableElement object.
 
@@ -97,6 +97,15 @@ class TableElement(Element):
             str: A string representation of the object.
         """
         return f"TableElement(x_min={self.x_min}, y_min={self.y_min}, x_max={self.x_max}, y_max={self.y_max}, pipeline_step={self.pipeline_step}, table_data={self.table_data}, has_equation_inside={self.has_equation_inside})"
+
+    def __str__(self):
+        """
+        Returns a string representation of the object, which is the same as its official representation.
+        
+        Returns:
+            str: A string that can be used to recreate the object.
+        """
+        return self.__repr__()
 
     def generate_markdown(self, output_directory: str) -> str:
         """
