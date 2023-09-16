@@ -48,17 +48,21 @@ class EquationFinder:
         # Use the loaded model to detect equations in the given image
         equations = self.model(image)
         empty_elements = []
+
+        # Getting image width and height 
+        width, height = image.size
+        
         for equation in equations:
           
           # Getting position values
           x_min, y_min = equation['box'][:,0]
           x_max, y_max = equation['box'][:,3]
 
-          # Normalizing Coordinates
-          x_min /= image.size[0]
-          y_min /= image.size[1]
-          x_max /= image.size[0]
-          y_max /= image.size[1]
+          # Normalizing coordinates to be in range [0,1]
+          x_min = x_min/width
+          x_max = x_max/width
+          y_min = y_min/height
+          y_max = y_max/height
 
           # Verifying if the equation is in the middle of  text
           is_inside_text = bool(equation['type']=='embedding')
