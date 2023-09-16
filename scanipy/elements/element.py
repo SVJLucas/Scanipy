@@ -3,7 +3,8 @@ from typing import Union
 # Define the Element class
 class Element:
     def __init__(self, x_min: float, y_min: float, x_max: float, y_max: float,
-                 pipeline_step:Union[int, None]=None, page_number: Union[int, None] = None, intersection_percentage_threshold = 90):
+                 pipeline_step:Union[int, None]=None, page_number: Union[int, None] = None,
+                 intersection_percentage_threshold = 90):
         """
         Initialize an Element object with normalized coordinates, an optional pipeline step, and an intersection percentage threshold.
 
