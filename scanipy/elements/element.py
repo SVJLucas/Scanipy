@@ -69,7 +69,7 @@ class Element:
         """
         return f"Element(x_min={self._x_min}, y_min={self._y_min}, x_max={self._x_max}, y_max={self._y_max}, pipeline_step={self._pipeline_step}, page_number={self._page_number})"
 
-    def __str__(self):
+    def __str__(self) -> str:
         """
         Returns a string representation of the object, which is the same as its official representation.
         
