@@ -9,7 +9,7 @@ from math import ceil, floor
 import numpy as np
 import pandas as pd
 import cv2
-import pytesseract
+import pytesseract #TODO use TextOCR or 
 
 # Define the TableDataExtractor class
 class TableDataExtractor(Extractor):
