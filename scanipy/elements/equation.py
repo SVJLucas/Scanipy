@@ -11,16 +11,16 @@ class EquationElement(Element):
         is_inside_text (bool): Flag indicating if the equation is part of a text block.
     """
 
-    def __init__(self, x_min: int, y_min: int, x_max: int, y_max: int, 
+    def __init__(self, x_min: float, y_min: float, x_max: float, y_max: float, 
                  pipeline_step: Union[int, None] = None):
         """
         Initialize an EquationElement object.
 
         Args:
-            x_min (int): The minimum x-coordinate.
-            y_min (int): The minimum y-coordinate.
-            x_max (int): The maximum x-coordinate.
-            y_max (int): The maximum y-coordinate.
+            x_min (float): The minimum x-coordinate of the element, normalized to the image width (range: 0 to 1).
+            y_min (float): The minimum y-coordinate of the element, normalized to the image height (range: 0 to 1).
+            x_max (float): The maximum x-coordinate of the element, normalized to the image width (range: 0 to 1).
+            y_max (float): The maximum y-coordinate of the element, normalized to the image height (range: 0 to 1).
             pipeline_step (Union[int, None], optional): The pipeline step, can be None.
 
         Raises:
