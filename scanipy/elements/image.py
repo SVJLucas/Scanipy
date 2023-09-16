@@ -1,4 +1,5 @@
 import os
+import logging
 from .element import Element
 from .equation import EquationElement
 from typing import Union, Any
@@ -211,6 +212,10 @@ class ImageElement(Element):
         Returns:
             str: Markdown representation of the image element.
         """
+        if self.image_content == None:
+            logging.warning('Tried to write a NoneType object')
+            return '\n\n'
+        
         # Create the filename for the image
         filename = f"{self.unique_key}.{self.image_extension}"
 

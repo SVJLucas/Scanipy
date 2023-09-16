@@ -1,3 +1,4 @@
+import logging
 from typing import Union
 from .element import Element
 
@@ -116,6 +117,10 @@ class EquationElement(Element):
         Returns:
             str: Markdown representation of the equation element.
         """
+        if self.latex_content == None:
+            logging.warning('Tried to write a NoneType object')
+            return '\n\n'
+
         # Concatenate the LaTeX content with newlines for Markdown formatting
         formatted_equation = self.latex_content + '\n\n'
         return formatted_equation

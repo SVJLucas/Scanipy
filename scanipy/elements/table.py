@@ -1,3 +1,4 @@
+import logging
 from typing import Union
 import pandas as pd
 from .element import Element
@@ -144,6 +145,10 @@ class TableElement(Element):
         Returns:
             str: Markdown representation of the table element.
         """
+        if self.table_data == None:
+            logging.warning('Tried to write a NoneType object')
+            return '\n\n'
+
         # Convert the DataFrame to Markdown format
         formatted_table = self.table_data.to_markdown() + '\n\n'
         return formatted_table

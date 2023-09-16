@@ -1,6 +1,9 @@
 from typing import Union
+import logging
 from .element import Element
 from .equation import EquationElement
+
+
 # Define the TitleElement class
 class TitleElement(Element):
     """
@@ -130,6 +133,7 @@ class TitleElement(Element):
             str: A string that can be used to recreate the object.
         """
         return self.__repr__()
+    
     def generate_markdown(self, output_directory: str) -> str:
         """
         Generate the Markdown representation of the title element.
@@ -140,6 +144,10 @@ class TitleElement(Element):
         Returns:
             str: Markdown representation of the title element.
         """
+        if self.title_content == None:
+            logging.warning('Tried to write a NoneType object')
+            return '\n\n'
+
         # Add Markdown header formatting to the title content
         formatted_title = '## ' + self.title_content + '\n\n'
         return formatted_title
