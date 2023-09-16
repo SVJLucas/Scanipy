@@ -67,11 +67,20 @@ class TextOCR:
 
         return text
 
-    def __str__(self) -> str:
+    def __repr__(self) -> str:
         """
-        Returns a string representation of the TextOCR object.
+        Returns a official string representation of the TextOCR object.
 
         Returns:
             str: A string representation of the object.
         """
         return f"TextOCR(lang={self.lang}, device={self.device})"
+
+    def __str__(self) -> str:
+        """
+        Returns a string representation of the TextOCR object, which is the same as its official representation.
+        
+        Returns:
+            str: A string that can be used to recreate the EquationToLatex object.
+        """
+        return self.__repr__()
