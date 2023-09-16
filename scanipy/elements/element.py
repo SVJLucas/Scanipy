@@ -60,7 +60,7 @@ class Element:
         self.width = x_max - x_min
         self.height = y_max - y_min
 
-    def __str__(self) -> str:
+    def __repr__(self) -> str:
         """
         Provides a human-readable representation of the Element object.
 
@@ -68,6 +68,15 @@ class Element:
             str: A string representation of the Element object.
         """
         return f"Element(x_min={self._x_min}, y_min={self._y_min}, x_max={self._x_max}, y_max={self._y_max}, pipeline_step={self._pipeline_step}, page_number={self._page_number})"
+
+    def __str__(self):
+        """
+        Returns a string representation of the object, which is the same as its official representation.
+        
+        Returns:
+            str: A string that can be used to recreate the object.
+        """
+        return self.__repr__()
 
     def __lt__(self, other)->bool:
         """
