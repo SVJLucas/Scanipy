@@ -139,7 +139,7 @@ class ImageElement(Element):
             raise TypeError("image_extension must be a string")
         self._image_extension = value
 
-    def __str__(self) -> str:
+    def __repr__(self) -> str:
         """
         Returns a string representation of the ImageElement object.
     
@@ -148,6 +148,15 @@ class ImageElement(Element):
         """
         return f"ImageElement(unique_key={self.unique_key}, x_min={self.x_min}, y_min={self.y_min}, x_max={self.x_max}, y_max={self.y_max}, pipeline_step={self.pipeline_step}, image_extension={self.image_extension}, has_equation_inside={self.has_equation_inside})"
 
+    def __str__(self):
+        """
+        Returns a string representation of the object, which is the same as its official representation.
+        
+        Returns:
+            str: A string that can be used to recreate the object.
+        """
+        return self.__repr__()
+        
     def display_image(self):
         """
         Display the image content using Matplotlib.
