@@ -1,0 +1,8 @@
+requests
+pyarxiv
+unidecode
+htmlmin
+"nougat-ocr[dataset]"
+opencv-python
+numpy
+tensorflow
