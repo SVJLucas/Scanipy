@@ -33,11 +33,11 @@ class TextOCR:
         else:
             self.lang = lang
             if self.lang != 'en':
-                self.model = easyocr.Reader([self.lang, 'en'])
+                self.model = easyocr.Reader([self.lang, 'en']).readtext
             else:
-                self.model = easyocr.Reader(['en'])
+                self.model = easyocr.Reader(['en']).readtext
 
-    def __call__(self, image: Image) -> str:
+    def __call__(self, image: Image.Image) -> str:
         """
         Perform OCR on the given image.
 
@@ -56,7 +56,7 @@ class TextOCR:
             if self.lang == 'en':
                 text = self.model(image)
             else:
-                text = self.model(image, lang=self.lang)
+                text = self.model(image, lang=self.lang) # type: ignore
         else:
             np_image = np.array(image)
             detections = self.model.recognize(np_image)

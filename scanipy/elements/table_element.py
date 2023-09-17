@@ -145,8 +145,12 @@ class TableElement(Element):
         Returns:
             str: Markdown representation of the table element.
         """
-        if self.table_data == None:
+        if self.table_data is None:
             logging.warning('Tried to write a NoneType object')
+            return '\n\n'
+
+        if self.table_data.empty:
+            logging.warning('Tried to write an empty DataFrame')
             return '\n\n'
 
         # Convert the DataFrame to Markdown format

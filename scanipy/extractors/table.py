@@ -60,14 +60,18 @@ class TableDataExtractor(Extractor):
 
         # Extract the structure from the cropped table image
         table_structure = self.model(table_image)
+
+        # Verify if table structure is empty
+        if table_structure is None:
+            raise ValueError('Found a null table structure') #TODO make a logic for this case
         
         # For some reason, this improves the cell boxes #FIXME
-        for box in table_structure:
-            box['box']['ymax'] =  box['box']['ymax'] + 5
+        for box in table_structure: # type: ignore
+            box['box']['ymax'] =  box['box']['ymax'] + 5 # type: ignore
 
         # Extract row and column bounding boxes from the table structure
-        rows = [box['box'] for box in table_structure if box['label'] == 'table row']
-        columns = [box['box'] for box in table_structure if box['label'] == 'table column']
+        rows = [box['box'] for box in table_structure if box['label'] == 'table row'] # type: ignore
+        columns = [box['box'] for box in table_structure if box['label'] == 'table column'] # type: ignore
 
 
         # Initialize a list to store cell positions
@@ -77,10 +81,10 @@ class TableDataExtractor(Extractor):
         #TODO: adapt for different table layouts
         for row in rows:
             for column in columns:
-                cell_xmin = max(row['xmin'], column['xmin'])
-                cell_ymin = max(row['ymin'], column['ymin'])
-                cell_xmax = min(row['xmax'], column['xmax'])
-                cell_ymax = min(row['ymax'], column['ymax'])
+                cell_xmin = max(row['xmin'], column['xmin']) # type: ignore
+                cell_ymin = max(row['ymin'], column['ymin']) # type: ignore
+                cell_xmax = min(row['xmax'], column['xmax']) # type: ignore
+                cell_ymax = min(row['ymax'], column['ymax']) # type: ignore
 
                 # Add the cell only if it has a non-zero area
                 if cell_xmin < cell_xmax and cell_ymin < cell_ymax:
@@ -109,7 +113,7 @@ class TableDataExtractor(Extractor):
             if row_idx == 0:
                 df = pd.DataFrame(columns=row_data)
             else:
-                df.loc[row_idx - 1] = row_data
+                df.loc[row_idx - 1] = row_data # type: ignore
         
         return df
     
@@ -251,4 +255,4 @@ class TableDataExtractor(Extractor):
         Returns:
             str: A string representation of the object.
         """
-        return f"TableDataExtractor(latex_ocr={self.latex_ocr})"
+        return f"TableDataExtractor(latex_ocr={self.model})"

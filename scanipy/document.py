@@ -3,6 +3,7 @@ import layoutparser as lp
 import numpy as np
 from .elements import TableElement, TextElement, ImageElement
 import matplotlib.pyplot as plt
+import matplotlib.patches as patches
 
 
 
@@ -49,14 +50,14 @@ class Document:
             self.elements[page] = []
         self.elements[page].append(element)
 
-    def visualize_pipeline(self, page=0, step=0):
-        if step == 0:
-            return lp.draw_box(self.images[page], self.layouts[page], box_width=5, box_alpha=0.2)
-        if step == 1:
-            self._visualize_tables(self.table_extractor_data[page]['image'],
-                                   self.table_extractor_data[page]['detected_tables'])
-            return
-        raise ValueError(f'step {step} not recognized')
+    # def visualize_pipeline(self, page=0, step=0):
+    #     if step == 0:
+    #         return lp.draw_box(self.images[page], self.layouts[page], box_width=5, box_alpha=0.2)
+    #     if step == 1:
+    #         self._visualize_tables(self.table_extractor_data[page]['image'],
+    #                                self.table_extractor_data[page]['detected_tables'])
+    #         return
+    #     raise ValueError(f'step {step} not recognized')
 
     def visualize_block(self, page=0, block=0):
         block = self.layouts[page][block]
@@ -76,7 +77,7 @@ class Document:
             xmin, ymin, xmax, ymax = table['box'].values()
 
             # Create a red rectangle around the table
-            rect = plt.Rectangle((xmin, ymin), xmax - xmin, ymax - ymin, linewidth=1, edgecolor='r', facecolor='none')
+            rect = patches.Rectangle((xmin, ymin), xmax - xmin, ymax - ymin, linewidth=1, edgecolor='r', facecolor='none')
 
             # Add the rectangle to the plot
             ax.add_patch(rect)

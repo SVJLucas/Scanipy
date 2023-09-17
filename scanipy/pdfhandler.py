@@ -3,6 +3,43 @@ import pdfplumber
 import pdfplumber.page
 from typing import Tuple, Iterator, List
 
+def draw_rectangle(image: Image.Image, coordinates: Tuple[float, float, float, float]) -> Image.Image:
+    """
+    Draw a rectangle on the page image and return the modified image.
+
+    Args:
+        image (PIL.Image.Image): The image on which to draw the rectangle.
+        coordinates (Tuple[float, float, float, float]): A tuple containing the coordinates
+            (xmin, ymin, xmax, ymax) of the rectangle, where each coordinate is in the range [0, 1].
+
+    Returns:
+        PIL.Image.Image: A modified PIL.Image.Image object with the rectangle drawn.
+    """
+    xmin, ymin, xmax, ymax = coordinates  # Unpack the coordinates tuple
+
+    # Get the dimensions (width and height) of the image
+    img_width, img_height = image.size
+
+    # Scale the coordinates to match the image size
+    if 0 <= xmin <= 1:
+        xmin = xmin * img_width
+        ymin = ymin * img_height
+        xmax = xmax * img_width
+        ymax = ymax * img_height
+
+    # Create a copy of the image to avoid modifying the original
+    modified_image = image.copy()
+
+    # Create a drawing context on the copy of the image
+    draw = ImageDraw.Draw(modified_image)
+
+    # Draw the rectangle on the copy of the image
+    draw.rectangle((xmin, ymin, xmax, ymax), outline="red", width=2)
+
+    # Display or save the modified image as needed
+    # You can add code here to display or save the image if necessary
+
+    return modified_image
 
 class PDFPage:
     def __init__(self, image: Image.Image, pdf_page: pdfplumber.page.Page, page_number: int) -> None:
@@ -37,29 +74,7 @@ class PDFPage:
         Returns:
             PIL.Image.Image: A modified PIL.Image.Image object with the rectangle drawn.
         """
-        xmin, ymin, xmax, ymax = coordinates  # Unpack the coordinates tuple
-
-        # Get the dimensions (width and height) of the image
-        img_width, img_height = self.image.size
-
-        # Scale the coordinates to match the image size
-        x1 = xmin * img_width
-        y1 = ymin * img_height
-        x2 = xmax * img_width
-        y2 = ymax * img_height
-
-        # Create a copy of the page image to avoid modifying the original
-        modified_image = self.image.copy()
-
-        # Create a drawing context on the copy of the image
-        draw = ImageDraw.Draw(modified_image)
-
-        # Draw the rectangle on the copy of the image
-        draw.rectangle([x1, y1, x2, y2], outline="red", width=2)
-
-        # Display or save the modified image as needed
-        # You can add code here to display or save the image if necessary
-
+        modified_image = draw_rectangle(self.image, coordinates)
         return modified_image
 
 

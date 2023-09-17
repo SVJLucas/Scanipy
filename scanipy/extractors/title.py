@@ -5,7 +5,7 @@ from pdfplumber.page import Page
 from .extractor import Extractor
 from scanipy.pdfhandler import PDFPage
 from scanipy.elements import TitleElement 
-from scanipy.deeplearning import TextOCR
+from scanipy.deeplearning.models import TextOCR
 from typing import Union, Tuple, List, Dict
 
 
@@ -50,7 +50,7 @@ class TitleExtractor(Extractor):
       # Set the tolerance level for title extraction
       self.tolerance = tolerance
 
-    def _process_title_image(self, title_element: TitleElement, title_image: Image, pdf_page: Page) -> str:
+    def _process_title_image(self, title_element: TitleElement, title_image: Image.Image, pdf_page: Page) -> str:
       """
       Process the title image based on OCR settings and equation presence.
 
@@ -74,7 +74,7 @@ class TitleExtractor(Extractor):
           else:
               return self._get_title_without_ocr(title_element, title_image, pdf_page)
 
-    def extract(self, page: PDFPage, page_image: Image, title_element: TitleElement) -> TitleElement:
+    def extract(self, page: PDFPage, title_element: TitleElement) -> TitleElement:
         """
         Extracts title from a given page image based on the coordinates in the title element.
 
@@ -99,11 +99,11 @@ class TitleExtractor(Extractor):
         if not isinstance(title_element, TitleElement):
             raise TypeError("title_element must be a TitleElement object")
 
-        # Extract the coordinates from the title element
-        left = title_element.x_min * page_image.width
-        upper = title_element.y_min * page_image.height
-        right = title_element.x_max * page_image.width
-        lower = title_element.y_max * page_image.height
+        # Extract the coordinates from the equation element
+        left = int(title_element.x_min * page_image.width)
+        upper = int(title_element.y_min * page_image.height)
+        right = int(title_element.x_max * page_image.width)
+        lower = int(title_element.y_max * page_image.height)
 
         # Crop the image based on the coordinates
         title_image = page_image.crop((left, upper, right, lower))
@@ -150,7 +150,7 @@ class TitleExtractor(Extractor):
             raise TypeError("Tolerance must be a float.")
         self._tolerance = value
 
-    def _get_title_and_equations_with_ocr(self, equation_title_image: Image) -> str:
+    def _get_title_and_equations_with_ocr(self, equation_title_image: Image.Image) -> str:
         """
         Extracts title and equations from a given image using Optical Character Recognition (OCR).
 
@@ -195,7 +195,7 @@ class TitleExtractor(Extractor):
 
         return final_extracted_title
 
-    def _get_title_with_ocr(self, cropped_title_image: Image) -> str:
+    def _get_title_with_ocr(self, cropped_title_image: Image.Image) -> str:
         """
         Extracts title from a given image using Optical Character Recognition (OCR).
 
@@ -219,7 +219,7 @@ class TitleExtractor(Extractor):
 
         return extracted_title
 
-    def _get_title_without_ocr(self, title_element: TitleElement, cropped_image: Image, pdf_page: Page) -> str:
+    def _get_title_without_ocr(self, title_element: TitleElement, cropped_image: Image.Image, pdf_page: Page) -> str:
         """
         Extracts title from a given area in a PDF page without using OCR.
 
@@ -325,7 +325,7 @@ class TitleExtractor(Extractor):
 
         x0, y0, _, _ = cropped_page.bbox
 
-        return x_min + x0, y_min + y0, x_max + x0, y_max + y0
+        return x_min + int(x0), y_min + int(y0), x_max + int(x0), y_max + int(y0)
 
     def _merge_line_titles(self, ocr_results: List[Dict]) -> str:
         """
@@ -346,7 +346,7 @@ class TitleExtractor(Extractor):
         text = pix2text.merge_line_texts(ocr_results)
         return text
 
-    def _get_title_and_equations_without_ocr(self, title_element: TitleElement, title_image: Image, pdf_page: Page) -> str:
+    def _get_title_and_equations_without_ocr(self, title_element: TitleElement, title_image: Image.Image, pdf_page: Page) -> str:
         """
         Extracts title and equations from a given title image without using OCR to extract title.
 

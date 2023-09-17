@@ -76,10 +76,10 @@ class ImageExtractor(Extractor):
             raise TypeError("image_extension must be an string or None")
         
         # Extract the coordinates from the image element
-        left = image_element.x_min
-        upper = image_element.y_min
-        right = image_element.x_max
-        lower = image_element.y_max
+        left = int(image_element.x_min * page_image.width)
+        upper = int(image_element.y_min * page_image.height)
+        right = int(image_element.x_max * page_image.width)
+        lower = int(image_element.y_max * page_image.height)
 
         # Crop the image based on the coordinates
         image_content = page_image.crop((left, upper, right, lower))

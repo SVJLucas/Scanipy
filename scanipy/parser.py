@@ -53,13 +53,13 @@ class Parser:
                             break #TODO: what if two elements have the same equation? #BUG
             
             for element in elements:
-                if element is TextElement:
+                if isinstance(element, TextElement):
                     element = self.text_extractor.extract(page, element)
-                elif element is TableElement:
+                elif isinstance(element, TableElement):
                     element = self.table_extractor.extract(page, element)
-                elif element is TitleElement:
+                elif isinstance(element, TitleElement):
                     element = self.title_extractor.extract(page, element)
-                elif element is ImageElement:
+                elif isinstance(element, ImageElement):
                     element = self.image_extractor.extract(page, element)
                 document.add_element(page.page_number, element)
             for equation in equations:

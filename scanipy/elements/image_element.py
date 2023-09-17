@@ -202,7 +202,7 @@ class ImageElement(Element):
         plt.axis('off')  # Turn off axis numbers and ticks
         plt.show()
 
-    def generate_markdown(self, output_directory) -> str:
+    def generate_markdown(self, output_directory: str) -> str:
         """
         Generate the Markdown representation of the image element and save the image to a file.
 

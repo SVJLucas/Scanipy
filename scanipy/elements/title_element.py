@@ -116,7 +116,7 @@ class TitleElement(Element):
             raise TypeError("title_content must be a string or None")
         self._title_content = value
 
-    def __str__(self) -> str:
+    def __repr__(self) -> str:
         """
         Returns a string representation of the TitleElement object.
 

@@ -49,7 +49,7 @@ class TextExtractor(Extractor):
       # Set the tolerance level for text extraction
       self.tolerance = tolerance
 
-    def _process_text_image(self, text_element: TextElement, text_image: Image, pdf_page: Page) -> str:
+    def _process_text_image(self, text_element: TextElement, text_image: Image.Image, pdf_page: Page) -> str:
       """
       Process the text image based on OCR settings and equation presence.
 
@@ -99,10 +99,10 @@ class TextExtractor(Extractor):
             raise TypeError("text_element must be a TextElement object")
 
         # Extract the coordinates from the text element
-        left = text_element.x_min * page_image.width
-        upper = text_element.y_min * page_image.height
-        right = text_element.x_max * page_image.width
-        lower = text_element.y_max * page_image.height
+        left = int(text_element.x_min * page_image.width)
+        upper = int(text_element.y_min * page_image.height)
+        right = int(text_element.x_max * page_image.width)
+        lower = int(text_element.y_max * page_image.height)
 
         # Crop the image based on the coordinates
         text_image = page_image.crop((left, upper, right, lower))
@@ -149,7 +149,7 @@ class TextExtractor(Extractor):
             raise TypeError("Tolerance must be a float.")
         self._tolerance = value
 
-    def _get_text_and_equations_with_ocr(self, equation_text_image: Image) -> str:
+    def _get_text_and_equations_with_ocr(self, equation_text_image: Image.Image) -> str:
         """
         Extracts text and equations from a given image using Optical Character Recognition (OCR).
 
@@ -194,7 +194,7 @@ class TextExtractor(Extractor):
 
         return final_extracted_text
 
-    def _get_text_with_ocr(self, cropped_text_image: Image) -> str:
+    def _get_text_with_ocr(self, cropped_text_image: Image.Image) -> str:
         """
         Extracts text from a given image using Optical Character Recognition (OCR).
 
@@ -218,7 +218,7 @@ class TextExtractor(Extractor):
 
         return extracted_text
 
-    def _get_text_without_ocr(self, text_element: TextElement, cropped_image: Image, pdf_page: Page) -> str:
+    def _get_text_without_ocr(self, text_element: TextElement, cropped_image: Image.Image, pdf_page: Page) -> str:
         """
         Extracts text from a given area in a PDF page without using OCR.
 
@@ -324,7 +324,7 @@ class TextExtractor(Extractor):
 
         x0, y0, _, _ = cropped_page.bbox
 
-        return x_min + x0, y_min + y0, x_max + x0, y_max + y0
+        return x_min + int(x0), y_min + int(y0), x_max + int(x0), y_max + int(y0)
 
     def _merge_line_texts(self, ocr_results: List[Dict]) -> str:
         """
@@ -345,7 +345,7 @@ class TextExtractor(Extractor):
         text = pix2text.merge_line_texts(ocr_results)
         return text
 
-    def _get_text_and_equations_without_ocr(self, text_element: TextElement, text_image: Image, pdf_page: Page) -> str:
+    def _get_text_and_equations_without_ocr(self, text_element: TextElement, text_image: Image.Image, pdf_page: Page) -> str:
         """
         Extracts text and equations from a given text image without using OCR to extract text.
 
