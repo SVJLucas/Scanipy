@@ -1,7 +1,6 @@
 import PIL
 import PIL.Image
 from PIL import Image, ImageDraw
-import fitz
 from typing import Union, List
 from layoutparser.models import Detectron2LayoutModel
 from scanipy.elements import TextElement,TitleElement,ImageElement,TableElement,EquationElement
