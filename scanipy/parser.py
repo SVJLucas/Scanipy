@@ -33,10 +33,11 @@ class Parser:
         self.equation_extractor = EquationExtractor()
         # self.pipeline = [self.text_extractor, self.table_extractor, self.equation_extractor]
     
-    def extract(self, path): #TODO add min and max pagges
+    def extract(self, path): #TODO add min and max pages
         pdfdoc = PDFDocument(path)
         elements_h = {}
         document = Document()
+        image_number = 0
 
         for page in pdfdoc:
             elements = self.layout_detector(page.get_image())
@@ -60,7 +61,9 @@ class Parser:
                 elif isinstance(element, TitleElement):
                     element = self.title_extractor.extract(page, element)
                 elif isinstance(element, ImageElement):
-                    element = self.image_extractor.extract(page, element)
+                    element = self.image_extractor.extract(page, element, unique_key=str(image_number))
+                    image_number += 1
+
                 document.add_element(page.page_number, element)
             for equation in equations:
                 equation = self.equation_extractor.extract(page, equation)

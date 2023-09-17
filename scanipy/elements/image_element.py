@@ -212,6 +212,11 @@ class ImageElement(Element):
         Returns:
             str: Markdown representation of the image element.
         """
+        # If the image is an equation, don't print it
+        if self.has_equation_inside:
+            return '\n'
+
+
         if self.image_content == None:
             logging.warning('Tried to write a NoneType object')
             return '\n\n'
