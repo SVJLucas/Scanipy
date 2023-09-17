@@ -2,7 +2,7 @@ import os
 import logging
 from .element import Element
 from .equation_element import EquationElement
-from typing import Union, Any
+from typing import Union, Any, List
 import matplotlib.pyplot as plt
 
 # Define the ImageElement class, which inherits from the Element class
@@ -15,6 +15,7 @@ class ImageElement(Element):
         image_content (Any): The actual content of the image.
         image_extension (str): The file extension for the image (e.g., 'jpg', 'png').
         has_equation_inside (bool): If there's some equation inside the image.
+        equations_inside (List['EquationElement']): The equations elements that are inside the image
     """
 
     def __init__(self, x_min: float, y_min: float, x_max: float, y_max: float,
@@ -42,33 +43,36 @@ class ImageElement(Element):
         self._unique_key = None
         self._image_content = None
         self._image_extension = None
-        self._has_equation_inside = False
-        self._equation_inside = None
-        
-    @property
-    def equation_inside(self) -> Union[EquationElement,None]:
-        """
-        Get the equation inside the element, if any.
-    
-        Returns:
-            EquationElement if the element contains equations, otherwise None.
-        """
-        return self._equation_inside
+        self._equations_inside = []
 
-    @equation_inside.setter
-    def equation_inside(self, value: EquationElement):
+    @property
+    def equations_inside(self) -> List['EquationElement']:
         """
-        Sets the equation inside the element.
+        Get the equations inside the element.
+
+        Returns:
+            List[EquationElement]: List of EquationElement contained in the element.
+        """
+        # Return the equation elements stored in the private variable
+        return self._equations_inside
+
+    @equations_inside.setter
+    def equations_inside(self, value: List['EquationElement']) -> None:
+        """
+        Sets the equations inside the element.
 
         Args:
-            value (EquationElement): The new EquationElement value.
+            value (List[EquationElement]): The new list of EquationElement values.
 
         Raises:
-            TypeError: If the provided value is not a EquationElement.
+            TypeError: If the provided value is not a list of EquationElement.
         """
-        if not isinstance(value, EquationElement):
-            raise TypeError("equation_inside must be a EquationElement")
-        self._equation_inside = value
+        # Check if the provided value is a list of EquationElement
+        if not all(isinstance(v, EquationElement) for v in value):  # Replace 'EquationElement' with the actual class name if needed
+            raise TypeError("equations_inside must be a list of EquationElement")
+        
+        # Set the equation elements in the private variable
+        self._equations_inside = value
 
     @property
     def has_equation_inside(self) -> bool:
@@ -175,7 +179,7 @@ class ImageElement(Element):
         Returns:
             str: A string representation of the object.
         """
-        return f"ImageElement(unique_key={self.unique_key}, x_min={self.x_min}, y_min={self.y_min}, x_max={self.x_max}, y_max={self.y_max}, pipeline_step={self.pipeline_step}, image_extension={self.image_extension}, has_equation_inside={self.has_equation_inside})"
+        return f"ImageElement(unique_key={self.unique_key}, x_min={self.x_min}, y_min={self.y_min}, x_max={self.x_max}, y_max={self.y_max}, pipeline_step={self.pipeline_step}, image_extension={self.image_extension}, has_equation_inside={self.has_equation_inside}, equations_inside={self.equations_inside})"
 
     def __str__(self):
         """
