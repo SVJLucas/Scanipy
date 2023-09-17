@@ -43,6 +43,7 @@ class ImageElement(Element):
         self._unique_key = None
         self._image_content = None
         self._image_extension = None
+        self._has_equation_inside = False
         self._equations_inside = []
 
     @property
