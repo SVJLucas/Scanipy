@@ -1,7 +1,7 @@
 import os
 import layoutparser as lp
 import numpy as np
-from .elements import TableElement, TextElement, ImageElement
+from scanipy.elements import TableElement, TextElement, ImageElement, EquationElement
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 
@@ -30,7 +30,6 @@ class Document:
         if not os.path.exists(output_folder):
             os.makedirs(output_folder)
         output = ""
-        # print(self.elements)
         sorted_pages = sorted(list(self.elements.keys()))
         for page in sorted_pages:
             sorted_elements = self.get_ordered_elements(page)
