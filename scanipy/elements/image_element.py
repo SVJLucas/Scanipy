@@ -15,7 +15,7 @@ class ImageElement(Element):
         image_content (Any): The actual content of the image.
         image_extension (str): The file extension for the image (e.g., 'jpg', 'png').
         has_equation_inside (bool): If there's some equation inside the image.
-        equations_inside (List['EquationElement']): The equations elements that are inside the image
+        equations_inside (List['EquationElement']): The equations elements that are inside the image.
     """
 
     def __init__(self, x_min: float, y_min: float, x_max: float, y_max: float,
