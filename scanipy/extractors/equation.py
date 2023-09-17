@@ -1,6 +1,5 @@
 from typing import Union
 from PIL import Image
-from fitz import Page
 from scanipy.deeplearning.models import EquationToLatex
 from scanipy.pdfhandler import PDFPage
 from .extractor import Extractor
