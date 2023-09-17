@@ -50,8 +50,7 @@ class Parser:
                     for element in elements:
                         if equation.is_in(element):
                             element.has_equation_inside = True
-                            element.equation_inside = equation
-                            break #TODO: what if two elements have the same equation? #BUG
+                            element.equation_inside.append(equation)
             
             for element in elements:
                 if isinstance(element, TextElement):
