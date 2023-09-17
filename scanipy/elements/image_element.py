@@ -98,7 +98,7 @@ class ImageElement(Element):
         self._has_equation_inside = value
 
     @property
-    def unique_key(self) -> str:
+    def unique_key(self) -> str | None:
         """
         Gets the unique key of the image element.
 
@@ -144,7 +144,7 @@ class ImageElement(Element):
         self._image_content = value
 
     @property
-    def image_extension(self) -> str:
+    def image_extension(self) -> str | None:
         """
         Gets the file extension of the image element.
 

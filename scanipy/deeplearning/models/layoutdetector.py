@@ -1,4 +1,5 @@
 import PIL
+import PIL.Image
 from PIL import Image, ImageDraw
 import fitz
 from typing import Union, List
@@ -53,13 +54,13 @@ class LayoutDetector:
         """
         return self.__repr__()
 
-    def __call__(self, image: PIL.Image, pipeline_step: Union[int, None] = None) -> List[Union[TextElement, TitleElement, ImageElement, TableElement]]:
+    def __call__(self, image: PIL.Image.Image, page_number: Union[int, None] = None) -> List[Union[TextElement, TitleElement, ImageElement, TableElement]]:
         """
         Detects layout elements in the given image and returns them as a list.
         
         Args:
             image: The image in which to detect layout elements.
-            pipeline_step: An optional integer representing the step in a pipeline. Defaults to None.
+            page_number: An optional integer representing the page number. Defaults to None.
         
         Returns:
             empty_elements: A list of detected layout elements, but only with its positions (no extracted content yet).
@@ -68,9 +69,9 @@ class LayoutDetector:
         if not isinstance(image, PIL.Image.Image):
             raise TypeError("Image must be a PIL.Image object.")
         
-        # Verify the type of the pipeline_step argument
-        if not (isinstance(pipeline_step, int) or pipeline_step is None):
-            raise TypeError("pipeline_step must be an integer or None.")
+        # Verify the type of the page_number argument
+        if not (isinstance(page_number, int) or page_number is None):
+            raise TypeError("page_number must be an integer or None.")
         
         # Perform layout detection on the image and convert the result to a DataFrame
         layout = self.model.detect(image).to_dataframe()
@@ -96,15 +97,15 @@ class LayoutDetector:
             element = None # Make sure that a new element is assigned
             match block.type:
                 case "List": #TODO
-                    element = TextElement(x_min, y_min, x_max, y_max, pipeline_step)
+                    element = TextElement(x_min, y_min, x_max, y_max, page_number=page_number)
                 case "Text":
-                    element = TextElement(x_min, y_min, x_max, y_max, pipeline_step)
+                    element = TextElement(x_min, y_min, x_max, y_max, page_number=page_number)
                 case "Title":
-                    element = TitleElement(x_min, y_min, x_max, y_max, pipeline_step)
+                    element = TitleElement(x_min, y_min, x_max, y_max, page_number=page_number)
                 case "Figure":
-                    element = ImageElement(x_min, y_min, x_max, y_max, pipeline_step)
+                    element = ImageElement(x_min, y_min, x_max, y_max, page_number=page_number)
                 case "Table":
-                    element = TableElement(x_min, y_min, x_max, y_max, pipeline_step)
+                    element = TableElement(x_min, y_min, x_max, y_max, page_number=page_number)
             # Append the detected element to the list
             elements.append(element)
         
@@ -113,7 +114,7 @@ class LayoutDetector:
 
     # Debug Function
     def _draw_rectangle(self, image: Image.Image, x1: float, y1: float, x2: float, y2: float, 
-                        outline_color: tuple = (255, 0, 0), thickness: int = 2) -> Image.Image:
+                        outline_color: tuple[int, int, int] = (255, 0, 0), thickness: int = 2) -> Image.Image:
         """
         Draw a rectangle on a PIL Image.
 
@@ -142,6 +143,6 @@ class LayoutDetector:
         draw = ImageDraw.Draw(image_copy)
 
         # Draw the rectangle
-        draw.rectangle([x1, y1, x2, y2], outline=outline_color, width=thickness)
+        draw.rectangle((x1, y1, x2, y2), outline=outline_color, width=thickness)
 
         return image_copy

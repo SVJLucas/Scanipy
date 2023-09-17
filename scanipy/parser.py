@@ -53,20 +53,17 @@ class Parser:
                             break #TODO: what if two elements have the same equation? #BUG
             
             for element in elements:
-                match str(type(element)):
-                    case 'TextElement':
-                        element = self.text_extractor(element)
-                    case 'TableElement':
-                        element = self.table_extractor(element)
-                    case 'TitleElement':
-                        element = self.title_extractor(element)
-                    case 'ImageElement':
-                        element = self.image_extractor(element)
-                element.num_page = page.page_number
+                if element is TextElement:
+                    element = self.text_extractor.extract(page, element)
+                elif element is TableElement:
+                    element = self.table_extractor.extract(page, element)
+                elif element is TitleElement:
+                    element = self.title_extractor.extract(page, element)
+                elif element is ImageElement:
+                    element = self.image_extractor.extract(page, element)
                 document.add_element(page.page_number, element)
             for equation in equations:
                 equation = self.equation_extractor.extract(page, equation)
-                equation.num_page = page.page_number
                 document.add_element(page.page_number, equation)
             elements_h[page.page_number] = [*elements,*equations]
 

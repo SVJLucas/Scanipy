@@ -47,13 +47,13 @@ class EquationExtractor(Extractor):
             raise TypeError("equation_element must be an EquationElement object")
 
         # Extract the coordinates from the equation element
-        left = equation_element.x_min
-        upper = equation_element.y_min
-        right = equation_element.x_max
-        lower = equation_element.y_max
+        left = equation_element.x_min * page_image.width
+        upper = equation_element.y_min * page_image.height
+        right = equation_element.x_max * page_image.width
+        lower = equation_element.y_max * page_image.height
 
         # Crop the image based on the coordinates
-        equation_image = page_image.crop((left, upper, right, lower))
+        equation_image = page_image.crop((left, upper, right, lower)) # type: ignore
 
         # Convert the cropped equation image to LaTeX using the OCR model
         latex = self.latex_ocr(equation_image)
