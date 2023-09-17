@@ -1,122 +1,411 @@
-import pdf2image
-import layoutparser as lp
-import numpy as np
-import PIL
-from doctr.models import ocr_predictor
 import torch
-import matplotlib.pyplot as plt
-from scanipy.elements import TextElement, ImageElement
-
-PIL.Image.LINEAR = PIL.Image.BILINEAR
-DPI = 200
-IMAGE_TO_FITZ_CONSTANT = 72 / DPI
-
+import pix2text
+from PIL import Image
+from pdfplumber.page import Page
 from .extractor import Extractor
-import fitz
+from scanipy.elements import TextElement 
+from scanipy.deeplearning.models import TextOCR
+from scanipy.pdfhandler import PDFPage
+from typing import Union, Tuple, List, Dict
 
-def is_valid_utf8(s):
-    try:
-        s.encode('utf-8').decode('utf-8')
-        return True
-    except UnicodeEncodeError:
-        return False
-
-
+# Define the TextExtractor class
 class TextExtractor(Extractor):
-    def __init__(self, use_cuda=False):
-        # models available at https://layout-parser.readthedocs.io/en/latest/notes/modelzoo.html
+    """
+    Represents a text extractor for extracting text from a document.
+    """
 
-        self.tesseract_ocr = lp.TesseractAgent(languages='eng')
-        self.doctr_ocr = ocr_predictor(det_arch='db_resnet50', reco_arch='crnn_mobilenet_v3_small', pretrained=True)
-        device = "cpu"
-        if use_cuda and torch.cuda.is_available():
-            self.doctr_ocr.cuda()
-            device = "cuda:0"
+    def __init__(self, use_ocr: bool, lang: str = 'en', tolerance: float = 1.5):
+      """
+      Initialize a TextExtractor object.
 
-        self.model = lp.models.Detectron2LayoutModel('lp://PubLayNet/mask_rcnn_X_101_32x8d_FPN_3x/config',
-                                              extra_config=["MODEL.ROI_HEADS.SCORE_THRESH_TEST", 0.8],
-                                              label_map={0: "Text", 1: "Title", 2: "List", 3: "Table", 4: "Figure"},
-                                              device=device)
+      Args:
+          use_ocr (bool): Whether to use OCR for text extraction or not.
+          lang (str): The language of the text. Defaults to english.
+          tolerance (float): The tolerance level for text extraction. Default is 1.5.
 
-    def extract_tesseract(self, segment_image):
-        return self.tesseract_ocr.detect(segment_image)
+      Raises:
+          TypeError: If the types of the arguments are not as expected.
+      """
 
-    def extract_doctr(self, segment_image):
-        out = self.doctr_ocr([segment_image])
-        text = []
-        json = out.export()
+      # Verify the input variable types
+      if not isinstance(use_ocr, bool):
+          raise TypeError("use_ocr must be a boolean")
 
-        for block in json['pages'][0]['blocks']:
-            for line in block['lines']:
-                for word in line['words']:
-                    text.append(word['value'])
-        return ' '.join(text)
+      # Initialize OCR settings and OCR model
+      self.use_ocr = use_ocr
 
-    def extract_pdf(self, page, x_min, y_min, x_max, y_max):
-        dimensions = [x_min, y_min, x_max, y_max]
-        dimensions = [d*IMAGE_TO_FITZ_CONSTANT for d in dimensions]
-        crop_rect = fitz.Rect(*dimensions)
-        text = page.get_text("text", clip=crop_rect).strip().replace('\n', ' ')
+      # Check if CUDA is available and set the device accordingly
+      self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
+
+      # Initialize OCR model for text and equations
+      self.text_equations_ocr = pix2text.Pix2Text(device=self.device)
+
+      # Set the language for OCR
+      self.lang = lang
+
+      # Initialize the TextOCR object
+      self.text_ocr = TextOCR(self.lang, self.device)
+
+      # Set the tolerance level for text extraction
+      self.tolerance = tolerance
+
+    def _process_text_image(self, text_element: TextElement, text_image: Image.Image, pdf_page: Page) -> str:
+      """
+      Process the text image based on OCR settings and equation presence.
+
+      Args:
+          text_element (TextElement): The text element containing the coordinates for extraction.
+          text_image (Image): The cropped text image.
+          pdf_page (Page): The PDF page containing the text element.
+
+      Returns:
+          str: The extracted text content.
+      """
+      # Use OCR or not based on the use_ocr flag and whether the text element contains equations
+      if self.use_ocr:
+          if text_element.has_equation_inside:
+              return self._get_text_and_equations_with_ocr(text_image)
+          else:
+              return self._get_text_with_ocr(text_image)
+      else:
+          if text_element.has_equation_inside:
+              return self._get_text_and_equations_without_ocr(text_element, text_image, pdf_page)
+          else:
+              return self._get_text_without_ocr(text_element, text_image, pdf_page)
+
+    def extract(self, page: PDFPage, text_element: TextElement) -> TextElement:
+        """
+        Extracts text from a given page image based on the coordinates in the text element.
+
+        Args:
+            pdf_page (Page): The PDF page from which to extract the text.
+            page_image (Image): The page image from which to extract the text.
+            text_element (TextElement): The text element containing the coordinates for extraction.
+
+        Returns:
+            TextElement: The updated text element with the extracted text content.
+
+        Raises:
+            TypeError: If the types of the arguments are not as expected.
+        """
+        # Separate PIL and pdfplumber elements from the page
+        pdf_page = page.get_pdf()
+        page_image = page.get_image()
+      
+        # Verify the input variable types
+        if not isinstance(page_image, Image.Image):
+            raise TypeError("page_image must be a PIL.Image object")
+        if not isinstance(text_element, TextElement):
+            raise TypeError("text_element must be a TextElement object")
+
+        # Extract the coordinates from the text element
+        left = int(text_element.x_min * page_image.width)
+        upper = int(text_element.y_min * page_image.height)
+        right = int(text_element.x_max * page_image.width)
+        lower = int(text_element.y_max * page_image.height)
+
+        # Crop the image based on the coordinates
+        text_image = page_image.crop((left, upper, right, lower))
+
+        # Process the cropped text image and extract the text content
+        text_content = self._process_text_image(text_element, text_image, pdf_page)
+
+        # Update the text element with the extracted text content
+        text_element.text_content = text_content
+
+        return text_element
+
+    def __str__(self) -> str:
+        """
+        Returns a string representation of the TextExtractor object.
+
+        Returns:
+            str: A string representation of the object.
+        """
+        return f"TextExtractor(use_ocr={self.use_ocr}, device={self.device}, lang={self.lang}, tolerance={self.tolerance}, text_ocr={self.text_ocr})"
+
+    @property
+    def tolerance(self) -> float:
+        """
+        Getter for the 'tolerance' attribute.
+
+        Returns:
+            float: The current tolerance level for text extraction.
+        """
+        return self._tolerance
+
+    @tolerance.setter
+    def tolerance(self, value: float):
+        """
+        Setter for the 'tolerance' attribute.
+
+        Args:
+            value (float): The new tolerance level to set for text extraction.
+
+        Raises:
+            TypeError: If the provided value is not a float.
+        """
+        if not isinstance(value, float):
+            raise TypeError("Tolerance must be a float.")
+        self._tolerance = value
+
+    def _get_text_and_equations_with_ocr(self, equation_text_image: Image.Image) -> str:
+        """
+        Extracts text and equations from a given image using Optical Character Recognition (OCR).
+
+        Args:
+            equation_text_image (Image): The cropped image containing the text and equations to be extracted.
+
+        Returns:
+            str: The extracted text and equations content.
+
+        Raises:
+            TypeError: If the type of the equation_text_image is not PIL.Image.
+
+        """
+
+        # Verify the input variable type
+        if not isinstance(equation_text_image, Image.Image):
+            raise TypeError("equation_text_image must be a PIL.Image object")
+
+        # Get OCR results for the text image
+        ocr_results = self.text_equations_ocr(equation_text_image)
+
+        # Loop through each OCR result box to process text and equations
+        for box in ocr_results:
+            if box['type'] == 'text':
+                # Extract and normalize coordinates from the OCR box
+                x_min, y_min, x_max, y_max = self._extract_coordinates(box)
+
+                # Crop the image based on the coordinates to get the phrase
+                cropped_phrase_image = equation_text_image.crop((x_min, y_min, x_max, y_max))
+
+                # Use OCR to extract text from the cropped phrase image
+                extracted_text = self.text_ocr(cropped_phrase_image)
+
+                # Remove newline characters from the extracted text
+                extracted_text = extracted_text.replace('\n', '')
+
+                # Update the OCR box with the extracted text
+                box['text'] = extracted_text
+
+        # Merge the extracted texts into a single string
+        final_extracted_text = self._merge_line_texts(ocr_results)
+
+        return final_extracted_text
+
+    def _get_text_with_ocr(self, cropped_text_image: Image.Image) -> str:
+        """
+        Extracts text from a given image using Optical Character Recognition (OCR).
+
+        Args:
+            cropped_text_image (Image): The cropped image containing the text to be extracted.
+
+        Returns:
+            str: The extracted text content.
+
+        Raises:
+            TypeError: If the type of the cropped_text_image is not PIL.Image.
+
+        """
+
+        # Verify the input variable type
+        if not isinstance(cropped_text_image, Image.Image):
+            raise TypeError("cropped_text_image must be a PIL.Image object")
+
+        # Use OCR to extract text from the image
+        extracted_text = self.text_ocr(cropped_text_image)
+
+        return extracted_text
+
+    def _get_text_without_ocr(self, text_element: TextElement, cropped_image: Image.Image, pdf_page: Page) -> str:
+        """
+        Extracts text from a given area in a PDF page without using OCR.
+
+        Args:
+            text_element (TextElement): The text element containing the coordinates for text extraction.
+            cropped_image (Image): The cropped image containing the text.
+            pdf_page (Page): The PDF page from which the text is to be extracted.
+
+        Returns:
+            str: The extracted text content.
+
+        Raises:
+            TypeError: If the types of the arguments are not as expected.
+        """
+
+        # Verify the input variable types
+        if not isinstance(text_element, TextElement):
+            raise TypeError("text_element must be an instance of TextElement")
+        if not isinstance(cropped_image, Image.Image):
+            raise TypeError("cropped_image must be a PIL.Image object")
+        if not isinstance(pdf_page, Page):
+            raise TypeError("pdf_page must be an instance of pdfplumber.Page")
+
+        # Get the dimensions of the PDF page
+        pdf_width, pdf_height = pdf_page.width, pdf_page.height
+
+        # Calculate the coordinates for text extraction based on the TextElement
+        x_min_coord = int(text_element.x_min * pdf_width)
+        y_min_coord = int(text_element.y_min * pdf_height)
+        x_max_coord = int(text_element.x_max * pdf_width)
+        y_max_coord = int(text_element.y_max * pdf_height)
+
+        # Define the bounding box for cropping the PDF page
+        bounding_box = (x_min_coord, y_min_coord, x_max_coord, y_max_coord)
+
+        # Crop the PDF page based on the bounding box
+        cropped_pdf_page = pdf_page.crop(bounding_box)
+
+        # Extract text from the cropped PDF page
+        extracted_text = cropped_pdf_page.extract_text(x_tolerance=self.tolerance)
+
+        # Remove newline characters from the extracted text
+        cleaned_text = extracted_text.replace('\n', '')
+
+        return cleaned_text
+
+    def _extract_coordinates(self, box: Dict):
+        """
+        Extract coordinates from the OCR box.
+
+        Args:
+            box (Dict): The OCR result box.
+
+        Returns:
+            Tuple[float, float, float, float]: Coordinates (x_min, y_min, x_max, y_max).
+        """
+        x_min = min(box['position'][:, 0])
+        y_min = min(box['position'][:, 1])
+        x_max = max(box['position'][:, 0])
+        y_max = max(box['position'][:, 1])
+
+        return x_min, y_min, x_max, y_max
+
+    def _extract_and_normalize_coordinates(self, box: Dict, image_size: Tuple[int, int]) -> Tuple[float, float, float, float]:
+        """
+        Extract and normalize coordinates from the OCR box.
+
+        Args:
+            box (Dict): The OCR result box.
+            image_size (Tuple[int, int]): The size of the image.
+
+        Returns:
+            Tuple[float, float, float, float]: Normalized coordinates (x_min, y_min, x_max, y_max).
+        """
+        x_min = min(box['position'][:, 0])
+        y_min = min(box['position'][:, 1])
+        x_max = max(box['position'][:, 0])
+        y_max = max(box['position'][:, 1])
+
+        # Normalizing Coordinates
+        x_min /= image_size[0]
+        y_min /= image_size[1]
+        x_max /= image_size[0]
+        y_max /= image_size[1]
+
+        return x_min, y_min, x_max, y_max
+
+    def _convert_to_cropped_page_referential(self, x_min: float, y_min: float, x_max: float, y_max: float, cropped_page: Page) -> Tuple[int, int, int, int]:
+        """
+        Convert normalized coordinates to cropped page's referential.
+
+        Args:
+            x_min, y_min, x_max, y_max (float): Normalized coordinates.
+            cropped_page (Page): The cropped PDF page.
+
+        Returns:
+            Tuple[int, int, int, int]: Coordinates in the cropped page's referential.
+        """
+        x_min = int(x_min * cropped_page.width)
+        y_min = int(y_min * cropped_page.height)
+        x_max = int(x_max * cropped_page.width)
+        y_max = int(y_max * cropped_page.height)
+
+        x0, y0, _, _ = cropped_page.bbox
+
+        return x_min + int(x0), y_min + int(y0), x_max + int(x0), y_max + int(y0)
+
+    def _merge_line_texts(self, ocr_results: List[Dict]) -> str:
+        """
+        Merges OCR results into a single string.
+
+        This method takes a list of dictionaries containing OCR results and merges them into a single string.
+        Each dictionary in the list is expected to contain text information, possibly among other details.
+
+        Args:
+            ocr_results (List[Dict]): A list of dictionaries containing OCR results.
+
+        Returns:
+            str: A single string that is the result of merging all the OCR text results.
+
+        Note:
+            This method currently uses the `pix2text.merge_line_texts` function for merging.
+        """
+        text = pix2text.merge_line_texts(ocr_results)
         return text
 
-    def extract(self, filepath, document, pipeline_step):
-        images = []
-        layouts = []
+    def _get_text_and_equations_without_ocr(self, text_element: TextElement, text_image: Image.Image, pdf_page: Page) -> str:
+        """
+        Extracts text and equations from a given text image without using OCR to extract text.
 
-        imgs = pdf2image.convert_from_path(filepath)
-        pdf_file = fitz.open(filepath)
+        Args:
+            text_element (TextElement): The text element containing the coordinates for extraction.
+            text_image (Image): The cropped text image.
+            pdf_page (Page): The PDF page containing the text element.
 
-        for img in imgs:
-            array_img = np.asarray(img)
-            layout = self.model.detect(array_img)
-            images.append(array_img)
-            layouts.append(layout)
-            document.store_page(img, layout)
+        Returns:
+            str: The extracted text content.
 
-        for page, img in enumerate(images):
-            image_width = len(img[0])
-            selected_blocks = layouts[page]
+        Raises:
+            TypeError: If the types of the arguments are not as expected.
+        """
+        # Verify the input variable types
+        if not isinstance(text_element, TextElement):
+            raise TypeError("text_element must be a TextElement object")
+        if not isinstance(text_image, Image.Image):
+            raise TypeError("text_image must be a PIL.Image object")
+        if not isinstance(pdf_page, Page):
+            raise TypeError("pdf_page must be a pdfplumber.Page object")
 
-            # Sort element ID of the left column based on y1 coordinate
-            left_interval = lp.Interval(0, image_width / 2, axis='x').put_on_canvas(img)
-            left_blocks = selected_blocks.filter_by(left_interval, center=True)._blocks
-            left_blocks.sort(key=lambda b: b.coordinates[1])
+        # Get PDF and image dimensions
+        pdf_width, pdf_height = pdf_page.width, pdf_page.height
+        image_width, image_height = text_image.size
 
-            # Sort element ID of the right column based on y1 coordinate
-            right_blocks = [b for b in selected_blocks if b not in left_blocks]
-            right_blocks.sort(key=lambda b: b.coordinates[1])
+        # Calculate PDF coordinates based on text element's normalized coordinates
+        x_min_pdf = int(text_element.x_min * pdf_width)
+        y_min_pdf = int(text_element.y_min * pdf_height)
+        x_max_pdf = int(text_element.x_max * pdf_width)
+        y_max_pdf = int(text_element.y_max * pdf_height)
 
-            # Sort the overall element ID starts from left column
-            selected_blocks = lp.Layout([b.set(id=idx) for idx, b in enumerate(left_blocks + right_blocks)])
+        # Define the PDF crop box
+        pdf_box = (x_min_pdf, y_min_pdf, x_max_pdf, y_max_pdf)
 
-            for i, block in enumerate(selected_blocks):
-                # Crop image around the detected layout
-                segment_image = (block
-                                 .pad(left=5, right=15, top=5, bottom=5)
-                                 .crop_image(img))
-                rect = block.block
-                x_min, y_min, x_max, y_max = rect.x_1, rect.y_1, rect.x_2, rect.y_2
+        # Crop the PDF page based on the calculated coordinates
+        cropped_page = pdf_page.crop(pdf_box)
 
-                if block.type in ['Text', 'Title']:
-                    text = self.extract_pdf(pdf_file[page], x_min, y_min, x_max, y_max)
-                    text = text.strip()
-                    style = None
-                    if block.type == 'Title':
-                        style = 'title'
-                    text = TextElement(x_min, y_min, x_max, y_max, 0, text, style)
+        # Get OCR results for the text image
+        ocr_results = self.text_equations_ocr(text_image)
 
-                    isolated_check = True
-                    for element in document.elements.get(page, []):
-                        if text.is_in(element):
-                            isolated_check = False
-                            break
-                    if isolated_check:
-                        document.add_element(page, text)
+        # Process each OCR result box
+        for box in ocr_results:
+            if box['type'] == 'text':
+                # Extract and normalize coordinates from the OCR box
+                x_min, y_min, x_max, y_max = self._extract_and_normalize_coordinates(box, text_image.size)
 
-                elif block.type == 'Figure':
-                    content = PIL.Image.fromarray(segment_image)
-                    image = ImageElement(x_min, y_min, x_max, y_max, pipeline_step, f'img{i}', content, 'png')
-                    document.add_element(page, image)
+                # Convert normalized coordinates to cropped page's referential
+                x_min, y_min, x_max, y_max = self._convert_to_cropped_page_referential(x_min, y_min, x_max, y_max, cropped_page)
 
-    def plot(self, page_number):
-        lp.draw_box(images[page_number], layouts[page_number], box_width=5, box_alpha=0.2)
+                # Extract text from the cropped PDF page based on the calculated coordinates
+                segmentation = cropped_page.crop((x_min, y_min, x_max, y_max))
+                extracted_text = segmentation.extract_text(x_tolerance=self.tolerance)
+                extracted_text = extracted_text.replace('\n', '')
+
+                # Update the OCR box with the extracted text
+                box['text'] = extracted_text
+
+        # Merge the extracted texts into a single string
+        final_text = self._merge_line_texts(ocr_results)
+
+        return final_text
+
